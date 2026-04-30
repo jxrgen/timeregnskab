@@ -1,0 +1,9 @@
+Name,Email,Active,Feriedage,Feriefridag,Sygedage,Ekstra_Hverdag,Ekstra_Lørdag,Ekstra_Søndag,Ekstra_Andet,Antal_timer,Token
+Kasper sangill Elgaard,kasper@example.com,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,RfvBDXBHQTqmFN_gJ2LWRg
+Jonas Strunge Christiansen,jonas@example.com,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,FALSE,AwATq3aIjyru2isTU2gpMQ
+Amalie Winther Hansen,amalie@example.com,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,61sGiOjBpiBUmvAdBEoOlQ
+Gitte Simonsen,gitte.s@example.com,TRUE,TRUE,TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,_y9WhaVcbbv395CL44bSZA
+Gitte Friis,gitte.f@example.com,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,wvbrTaSOjvV3_l0a7VwLIw
+Vitus,vitus@example.com,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,0d3S-Fv6l8ajRqJfC4QxJw
+Benjamin,benjamin@example.com,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,ojKfKetVu1TU5LIgVEaG0Q
+Mille Rask Steiner,mille@example.com,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,BWV48eFiJ_Dp0jUKaBmVVw
