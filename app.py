@@ -17,9 +17,17 @@ SUBMISSIONS_DIR = "submissions"
 
 def get_github_client():
     """Get authenticated GitHub client"""
-    token = st.secrets.get("GITHUB_TOKEN", os.getenv("GITHUB_TOKEN"))
+    # Try Streamlit secrets first, then environment variable
+    token = None
+    try:
+        token = st.secrets.get("GITHUB_TOKEN")
+    except:
+        pass
     if not token:
-        st.error("GitHub token ikke konfigureret")
+        token = os.getenv("GITHUB_TOKEN")
+    if not token:
+        st.error("GitHub token ikke konfigureret. Tjek secrets i Streamlit Cloud.")
+        st.info("Tilføj GITHUB_TOKEN i Streamlit Cloud → Settings → Secrets")
         return None
     return Github(token)
 
@@ -240,6 +248,8 @@ def employee_form():
     
     if not token:
         st.error("Ingen adgang - mangler token")
+        st.info("Medarbejdere: Brug det link du har modtaget med token")
+        st.info("Admin: Tilføj ?admin=true til URL'en")
         return
     
     df = load_employees()
