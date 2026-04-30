@@ -226,9 +226,12 @@ def admin_interface():
 def employee_form():
     token = st.query_params.get("token", "")
     if not token:
-        st.error("Ingen adgang - mangler token")
-        st.info("Medarbejdere: Brug det link du har modtaget")
-        st.info("Admin: Tilføj ?admin=true til URL'en")
+        st.title("⏰ Timeregnskab")
+        st.markdown("---")
+        st.info("**Medarbejdere:** Du skal bruge det personlige link du har modtaget")
+        st.info("**Admin:** Tilføj `?admin=true` til URL'en for at logge ind")
+        st.markdown("---")
+        st.caption("Kontakt admin hvis du mangler dit link")
         return
     
     df = load_employees()
