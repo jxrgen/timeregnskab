@@ -373,37 +373,49 @@ def employee_form():
     # Initialize session state
     if 'indberet_confirmed' not in st.session_state:
         st.session_state.indberet_confirmed = existing.get('udfyldt', False) if existing else False
-    if 'show_confirm' not in st.session_state:
-        st.session_state.show_confirm = False
+    if 'pending_confirm' not in st.session_state:
+        st.session_state.pending_confirm = False
     
-    # Checkbox with red border - use st.error or st.warning for visual indication
-    st.markdown('<div style="border: 2px solid red; padding: 10px; border-radius: 5px; margin: 10px 0;">', unsafe_allow_html=True)
-    indberet = st.checkbox("Marker for at indberette", value=st.session_state.indberet_confirmed, key="indberet_cb")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Show red warning box
+    if not st.session_state.indberet_confirmed:
+        st.error("**Marker for at indberette**")
     
-    # Show confirmation popup when checkbox is checked
-    if indberet and not st.session_state.indberet_confirmed and not st.session_state.show_confirm:
-        st.session_state.show_confirm = True
+    # Checkbox
+    indberet = st.checkbox(
+        "Marker for at indberette" if not st.session_state.indberet_confirmed else "Allerede indberettet",
+        value=st.session_state.indberet_confirmed,
+        key="indberet_cb",
+        disabled=st.session_state.indberet_confirmed
+    )
     
-    # Reset if checkbox is unchecked
-    if not indberet:
+    # If unchecked after being confirmed
+    if not indberet and st.session_state.indberet_confirmed:
         st.session_state.indberet_confirmed = False
-        st.session_state.show_confirm = False
+        st.session_state.pending_confirm = False
+    
+    # If checked but not confirmed, show confirmation
+    if indberet and not st.session_state.indberet_confirmed:
+        st.session_state.pending_confirm = True
     
     # Confirmation popup
-    if st.session_state.show_confirm:
+    if st.session_state.pending_confirm and not st.session_state.indberet_confirmed:
         st.warning("⚠️ Vil du indberette nu?")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Ja, indberet nu", key="confirm_yes"):
                 st.session_state.indberet_confirmed = True
-                st.session_state.show_confirm = False
+                st.session_state.pending_confirm = False
         with col2:
             if st.button("Nej, annuller", key="confirm_no"):
-                st.session_state.indberet_confirmed = False
-                st.session_state.show_confirm = False
+                st.session_state.pending_confirm = False
                 st.session_state.indberet_cb = False
         st.markdown("---")
+    
+    # Fortryd button if already confirmed
+    if st.session_state.indberet_confirmed:
+        if st.button("Fortryd indberetning"):
+            st.session_state.indberet_confirmed = False
+            st.session_state.pending_confirm = False
     
     data['udfyldt'] = st.session_state.indberet_confirmed
     
