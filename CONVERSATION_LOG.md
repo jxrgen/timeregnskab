@@ -65,25 +65,30 @@ Dato: 30. april 2026 (opdateret 1. maj 2026)
 - Flyttet til config.json (load_config/save_config funktioner tilføjet)
 - Læses af både Streamlit app og GitHub Actions scripts
 - "Send test-email" knap tilføjet i admin SMTP sektion
+- SMTP port 465 (SSL) understøttet til one.com og lignende
+- **Testet og virker med one.com** (send.one.com, port 465)
 
-### 3. "Indberet" checkbox forbedringer
-- Rød ramme omkring checkbox (div med border: 2px solid red)
-- Popup "Vil du indberette nu?" når checkbox markeres
-- Ja/Nej knapper til at bekræfte eller annullere
+### 3. "Indberet" checkbox
+- Simpel checkbox med rød tekst "Indberet" (st.error)
+- Når medarbejder markerer "Marker for at indberette" og trykker "Gem"
+- Så gemmes `udfyldt: true` i JSON filen
+- Admin > "Indsendelser" viser "✅ Udfyldt" for den medarbejder
 
-### 4. Session state håndtering
-- `indberet_state`: 'idle', 'confirming', 'confirmed'
-- `indberet_cb`: checkbox værdi
-- `indberet_confirmed`: om indberetning er bekræftet
+### 4. Nyt faneblad "Fælles besked"
+- Tilføjet som tab4 i admin interface
+- Viser alle aktive medarbejdere med checkbox ud for hver
+- Tekstfelt til at skrive en fælles besked
+- "Send fælles besked" knap sender email til alle valgte medarbejdere
+- Bruger SMTP indstillinger fra config.json
 
 ## Status
-- Koden er opdateret og klar
-- SMTP function names verificeret korrekte (MIMEText, MIMEMultipart, smtplib.SMTP, server.quit())
-- Mangler: Commit og push til GitHub
-- Herefter: Deploy til Streamlit Cloud og konfigurer secrets
+- Koden er opdateret og pushet til GitHub (commit `31b9f6b`, `9a09361`, `6e44af1`)
+- SMTP virker med one.com (test-email sendes succesfuldt)
+- Nyt faneblad "Fælles besked" er tilføjet
+- **Mangler:** Fælles besked faneblad skal testes af bruger
 
-## TODO før deployment
-1. Push kode til GitHub repo
+## TODO
+1. Test "Fælles besked" fanebladet (vælg medarbejdere, skriv besked, send)
 2. Deploy til Streamlit Cloud (forbind til GitHub repo)
 3. Konfigurer secrets i Streamlit Cloud (GITHUB_TOKEN, ADMIN_PASSWORD, APP_URL)
 4. Konfigurer GitHub Repository Secrets (SMTP settings bruges kun af GitHub Actions)

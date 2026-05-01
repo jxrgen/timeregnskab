@@ -147,7 +147,7 @@ def admin_interface():
         st.warning("Kunne ikke indlæse medarbejdere")
         return
     
-    tab1, tab2, tab3 = st.tabs(["Medarbejdere", "Tilføj ny", "Indsendelser"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Medarbejdere", "Tilføj ny", "Indsendelser", "Fælles besked"])
     
     with tab1:
         st.subheader("Eksisterende medarbejdere")
@@ -252,6 +252,76 @@ def admin_interface():
                     submission = load_submission(row['Name'], month)
                     status = "✅ Udfyldt" if submission and submission.get('udfyldt') else "❌ Mangler"
                     st.write(f"{row['Name']}: {status}")
+    
+    with tab4:
+        st.subheader("Fælles besked")
+        st.write("Vælg medarbejdere og skriv en besked der skal sendes til dem alle.")
+        
+        # Show all employees with checkboxes
+        st.write("**Vælg modtagere:**")
+        selected = []
+        for idx, row in df.iterrows():
+            if row['Active']:
+                if st.checkbox(f"{row['Name']} ({row['Email']})", key=f"select_{idx}"):
+                    selected.append(row)
+        
+        # Message text area
+        st.write("**Skriv besked:**")
+        message = st.text_area("Besked", height=150, key="common_message")
+        
+        # Send button
+        if st.button("Send fælles besked", key="send_common"):
+            if not message:
+                st.error("Du skal skrive en besked!")
+            elif not selected:
+                st.error("Du skal vælge mindst en medarbejder!")
+            else:
+                # Get SMTP config
+                config = load_config()
+                smtp_server = config.get('smtp_server', '')
+                smtp_port = config.get('smtp_port', 587)
+                smtp_username = config.get('smtp_username', '')
+                smtp_password = config.get('smtp_password', '')
+                
+                if not all([smtp_server, smtp_username, smtp_password]):
+                    st.error("SMTP-indstillinger mangler! Konfigurer dem nederst på siden.")
+                else:
+                    import smtplib
+                    from email.mime.text import MIMEText
+                    from email.mime.multipart import MIMEMultipart
+                    
+                    sent_count = 0
+                    error_count = 0
+                    
+                    for emp in selected:
+                        try:
+                            msg = MIMEMultipart()
+                            msg['From'] = smtp_username
+                            msg['To'] = emp['Email']
+                            msg['Subject'] = "Besked fra Timeregnskab"
+                            
+                            body = f"Hej {emp['Name']},\n\n{message}\n\nVenlig hilsen,\nAdministrationen"
+                            msg.attach(MIMEText(body, 'plain', 'utf-8'))
+                            
+                            port = int(smtp_port)
+                            if port == 465:
+                                server = smtplib.SMTP_SSL(smtp_server, port)
+                            else:
+                                server = smtplib.SMTP(smtp_server, port)
+                                server.starttls()
+                            
+                            server.login(smtp_username, smtp_password)
+                            server.send_message(msg)
+                            server.quit()
+                            sent_count += 1
+                        except Exception as e:
+                            st.error(f"Kunne ikke sende til {emp['Name']}: {str(e)}")
+                            error_count += 1
+                    
+                    if sent_count > 0:
+                        st.success(f"✅ Besked sendt til {sent_count} medarbejder(e)!")
+                    if error_count > 0:
+                        st.warning(f"Kunne ikke sende til {error_count} medarbejder(e)")
     
     st.divider()
     
