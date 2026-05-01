@@ -280,9 +280,9 @@ def admin_interface():
     with col1:
         smtp_server = st.text_input("SMTP Server", value=config.get('smtp_server', 'smtp.gmail.com'))
         smtp_port = st.number_input("SMTP Port", value=int(config.get('smtp_port', 587)), min_value=1, max_value=65535)
-        smtp_username = st.text_input("SMTP Brugernavn (email)", value=config.get('smtp_username', ''))
+        smtp_username = st.text_input("Smtp Brugernavn (email)", value=config.get('smtp_username', ''))
     with col2:
-        smtp_password = st.text_input("SMTP Password (app password)", value=config.get('smtp_password', ''), type="password")
+        smtp_password = st.text_input("Smtp Password (app password)", value=config.get('smtp_password', ''), type="password")
         admin_email = st.text_input("Admin Email (modtager)", value=config.get('admin_email', ''))
     
     if st.button("Gem SMTP-indstillinger"):
@@ -294,7 +294,31 @@ def admin_interface():
         if save_config(config):
             st.success("SMTP-indstillinger gemt!")
             st.rerun()
-
+    
+    if st.button("Send test-email"):
+        try:
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
+            msg = MIMEMultipart()
+            msg["From"] = smtp_username
+            msg["To"] = admin_email
+            msg["Subject"] = "Test email fra Timeregnskab"
+            
+            body = "Dette er en test email for at verificere SMTP-indstillingerne."
+            msg.attach(MIMEText(body, "plain", "utf-8"))
+            
+            server = smtplib.SMTP(smtp_server, int(smtp_port))
+            server.starttls()
+            server.login(smtp_username, smtp_password)
+            server.send_message(msg)
+            server.quit()
+            
+            st.success("✅ Test-email sendt! Tjek din indbakke.")
+        except Exception as e:
+            st.error(f"❌ Kunne ikke sende test-email: {str(e)}")
+ 
 def employee_form():
     token = st.query_params.get("token", "")
     if not token:
@@ -341,36 +365,44 @@ def employee_form():
         data['antal_timer'] = st.number_input("Antal timer i alt", value=existing.get('antal_timer', 0) if existing else 0, min_value=0)
     
     st.markdown("---")
-    st.markdown('<div style="border: 3px solid red; padding: 15px; border-radius: 5px;">', unsafe_allow_html=True)
-    st.markdown('<span style="color:red; font-weight:bold; font-size: 18px;">Indberet</span>', unsafe_allow_html=True)
     
     if 'indberet_state' not in st.session_state:
         st.session_state.indberet_state = 'idle'
+        st.session_state.indberet_cb = existing.get('udfyldt', False) if existing else False
+        st.session_state.indberet_confirmed = existing.get('udfyldt', False) if existing else False
     
-    checkbox_value = st.checkbox("Marker for at indberette", 
-                                value=existing.get('udfyldt', False) if existing else False,
-                                key="indberet_checkbox")
+    # Red border around checkbox
+    st.markdown('<div style="border: 2px solid red; padding: 10px; border-radius: 5px; margin: 10px 0;">', unsafe_allow_html=True)
+    st.checkbox("Marker for at indberette", value=st.session_state.indberet_cb, key="indberet_cb")
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    if checkbox_value and st.session_state.indberet_state == 'idle':
+    # Handle checkbox state changes
+    if st.session_state.indberet_cb and st.session_state.indberet_state == 'idle':
         st.session_state.indberet_state = 'confirming'
         st.rerun()
     
+    if not st.session_state.indberet_cb and st.session_state.indberet_confirmed:
+        st.session_state.indberet_confirmed = False
+        st.session_state.indberet_state = 'idle'
+    
+    # Confirmation popup
     if st.session_state.indberet_state == 'confirming':
         st.warning("⚠️ Vil du indberette nu?")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Ja, indberet nu", key="confirm_yes"):
+                st.session_state.indberet_confirmed = True
                 st.session_state.indberet_state = 'confirmed'
                 st.rerun()
         with col2:
             if st.button("Nej, annuller", key="confirm_no"):
+                st.session_state.indberet_confirmed = False
                 st.session_state.indberet_state = 'idle'
+                st.session_state.indberet_cb = False
                 st.rerun()
+        st.markdown("---")
     
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown("---")
-    
-    data['udfyldt'] = checkbox_value and st.session_state.indberet_state == 'confirmed'
+    data['udfyldt'] = st.session_state.get('indberet_confirmed', False)
     
     if st.button("Gem"):
         data['timestamp'] = datetime.now().isoformat()

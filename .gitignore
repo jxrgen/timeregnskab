@@ -1,2 +1,7 @@
 token.txt
 .__*
+.DS_Store
+__pycache__/
+*.pyc
+secrets*.toml
+config.json
