@@ -81,16 +81,17 @@ Dato: 30. april 2026 (opdateret 1. maj 2026)
 - "Send fælles besked" knap sender email til alle valgte medarbejdere
 - Bruger SMTP indstillinger fra config.json
 
-## Status
-- Koden er opdateret og pushet til GitHub (commit `31b9f6b`, `9a09361`, `6e44af1`)
-- SMTP virker med one.com (test-email sendes succesfuldt)
-- Nyt faneblad "Fælles besked" er tilføjet
-- **Mangler:** Fælles besked faneblad skal testes af bruger
+## Status (1. maj 2026 - AFLSUTTET)
+- ✅ Koden er opdateret og pushet til GitHub (seneste commit `5af52b6`)
+- ✅ SMTP virker med one.com (test-email sendes succesfuldt)
+- ✅ Nyt faneblad "Fælles besked" er tilføjet og testet - virker perfekt
+- ✅ Medarbejdere kan markere "Indberet" og det vises i admin
+- ✅ Admin interface reorganiseret (medarbejdere først, indstillinger til sidst)
+- ✅ "Send test-email" knap virker i admin SMTP sektion
 
-## TODO
-1. Test "Fælles besked" fanebladet (vælg medarbejdere, skriv besked, send)
-2. Deploy til Streamlit Cloud (forbind til GitHub repo)
-3. Konfigurer secrets i Streamlit Cloud (GITHUB_TOKEN, ADMIN_PASSWORD, APP_URL)
-4. Konfigurer GitHub Repository Secrets (SMTP settings bruges kun af GitHub Actions)
-5. Tilføj medarbejdere via admin interface
-6. Send links til medarbejdere
+## Næste skridt (for bruger)
+1. Deploy til Streamlit Cloud (forbind til GitHub repo)
+2. Konfigurer secrets i Streamlit Cloud (GITHUB_TOKEN, ADMIN_PASSWORD, APP_URL)
+3. Konfigurer GitHub Repository Secrets (SMTP settings)
+4. Tilføj medarbejdere via admin interface (`?admin=true`)
+5. Send links til medarbejdere
