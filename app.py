@@ -141,46 +141,6 @@ def admin_interface():
     st.success("Velkommen til admin interface")
     st.markdown("**Funktionalitet:** Her kan du administrere medarbejdere, tilføje nye og se indsendelser. Du kan også ændre generelle indstillinger for tidsfrister og notifikationer.")
     
-    config = load_config()
-    
-    st.subheader("Instruktioner og overordnede indstillinger")
-    st.write(f"Medarbejderne skal indberette deres skema senest d. {config.get('submission_deadline_day', 20)} i hver måned. Hvis en medarbejder ikke har gjort det, vil der automatisk blive sendt en påmindelsesmail til vedkommende. Alle skemaer vil blive sendt til administratoren d. {config.get('admin_notification_day', 25)} i måneden.")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        new_deadline = st.number_input("Seneste indberetningsdag (XX)", min_value=1, max_value=31, value=config.get('submission_deadline_day', 20))
-    with col2:
-        new_notification = st.number_input("Dag for afsendelse til admin (XX)", min_value=1, max_value=31, value=config.get('admin_notification_day', 25))
-    
-    if st.button("Gem indstillinger"):
-        config['submission_deadline_day'] = new_deadline
-        config['admin_notification_day'] = new_notification
-        if save_config(config):
-            st.success("Indstillinger gemt!")
-            st.rerun()
-    
-    st.subheader("SMTP Email-indstillinger")
-    st.info("Disse indstillinger bruges til at sende påmindelser og notifikationer via GitHub Actions.")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        smtp_server = st.text_input("SMTP Server", value=config.get('smtp_server', 'smtp.gmail.com'))
-        smtp_port = st.number_input("SMTP Port", value=int(config.get('smtp_port', 587)), min_value=1, max_value=65535)
-        smtp_username = st.text_input("SMTP Brugernavn (email)", value=config.get('smtp_username', ''))
-    with col2:
-        smtp_password = st.text_input("SMTP Password (app password)", value=config.get('smtp_password', ''), type="password")
-        admin_email = st.text_input("Admin Email (modtager)", value=config.get('admin_email', ''))
-    
-    if st.button("Gem SMTP-indstillinger"):
-        config['smtp_server'] = smtp_server
-        config['smtp_port'] = smtp_port
-        config['smtp_username'] = smtp_username
-        config['smtp_password'] = smtp_password
-        config['admin_email'] = admin_email
-        if save_config(config):
-            st.success("SMTP-indstillinger gemt!")
-            st.rerun()
-    
     df = load_employees()
     
     if df.empty:
@@ -292,6 +252,48 @@ def admin_interface():
                     submission = load_submission(row['Name'], month)
                     status = "✅ Udfyldt" if submission and submission.get('udfyldt') else "❌ Mangler"
                     st.write(f"{row['Name']}: {status}")
+    
+    st.divider()
+    
+    config = load_config()
+    
+    st.subheader("Instruktioner og overordnede indstillinger")
+    st.write(f"Medarbejderne skal indberette deres skema senest d. {config.get('submission_deadline_day', 20)} i hver måned. Hvis en medarbejder ikke har gjort det, vil der automatisk blive sendt en påmindelsesmail til vedkommende. Alle skemaer vil blive sendt til administratoren d. {config.get('admin_notification_day', 25)} i måneden.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        new_deadline = st.number_input("Seneste indberetningsdag", min_value=1, max_value=31, value=config.get('submission_deadline_day', 20))
+    with col2:
+        new_notification = st.number_input("Dag for afsendelse til admin", min_value=1, max_value=31, value=config.get('admin_notification_day', 25))
+    
+    if st.button("Gem indstillinger"):
+        config['submission_deadline_day'] = new_deadline
+        config['admin_notification_day'] = new_notification
+        if save_config(config):
+            st.success("Indstillinger gemt!")
+            st.rerun()
+    
+    st.subheader("SMTP Email-indstillinger")
+    st.info("Disse indstillinger bruges til at sende påmindelser og notifikationer via GitHub Actions.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        smtp_server = st.text_input("SMTP Server", value=config.get('smtp_server', 'smtp.gmail.com'))
+        smtp_port = st.number_input("SMTP Port", value=int(config.get('smtp_port', 587)), min_value=1, max_value=65535)
+        smtp_username = st.text_input("SMTP Brugernavn (email)", value=config.get('smtp_username', ''))
+    with col2:
+        smtp_password = st.text_input("SMTP Password (app password)", value=config.get('smtp_password', ''), type="password")
+        admin_email = st.text_input("Admin Email (modtager)", value=config.get('admin_email', ''))
+    
+    if st.button("Gem SMTP-indstillinger"):
+        config['smtp_server'] = smtp_server
+        config['smtp_port'] = smtp_port
+        config['smtp_username'] = smtp_username
+        config['smtp_password'] = smtp_password
+        config['admin_email'] = admin_email
+        if save_config(config):
+            st.success("SMTP-indstillinger gemt!")
+            st.rerun()
 
 def employee_form():
     token = st.query_params.get("token", "")
@@ -338,41 +340,50 @@ def employee_form():
     if emp['Antal_timer']:
         data['antal_timer'] = st.number_input("Antal timer i alt", value=existing.get('antal_timer', 0) if existing else 0, min_value=0)
     
-    st.markdown('<span style="color:red; font-weight:bold">Indberet</span>', unsafe_allow_html=True)
-    indberet = st.checkbox(" ", value=existing.get('udfyldt', False) if existing else False, key="indberet")
-    data['udfyldt'] = indberet
+    st.markdown("---")
+    st.markdown('<div style="border: 3px solid red; padding: 15px; border-radius: 5px;">', unsafe_allow_html=True)
+    st.markdown('<span style="color:red; font-weight:bold; font-size: 18px;">Indberet</span>', unsafe_allow_html=True)
+    
+    if 'indberet_state' not in st.session_state:
+        st.session_state.indberet_state = 'idle'
+    
+    checkbox_value = st.checkbox("Marker for at indberette", 
+                                value=existing.get('udfyldt', False) if existing else False,
+                                key="indberet_checkbox")
+    
+    if checkbox_value and st.session_state.indberet_state == 'idle':
+        st.session_state.indberet_state = 'confirming'
+        st.rerun()
+    
+    if st.session_state.indberet_state == 'confirming':
+        st.warning("⚠️ Vil du indberette nu?")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Ja, indberet nu", key="confirm_yes"):
+                st.session_state.indberet_state = 'confirmed'
+                st.rerun()
+        with col2:
+            if st.button("Nej, annuller", key="confirm_no"):
+                st.session_state.indberet_state = 'idle'
+                st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("---")
+    
+    data['udfyldt'] = checkbox_value and st.session_state.indberet_state == 'confirmed'
     
     if st.button("Gem"):
         data['timestamp'] = datetime.now().isoformat()
         data['employee'] = emp['Name']
         data['month'] = get_month_name()
         
-        if indberet:
-            if not st.session_state.get('confirm_indberet', False):
-                st.session_state.confirm_indberet = True
-                st.warning("⚠️ Er du sikker på at du vil indberette nu?")
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("Ja, indberet nu", key="confirm_yes"):
-                        if save_submission(emp['Name'], data):
-                            st.success("✅ Indberettet!")
-                            st.balloons()
-                            st.session_state.confirm_indberet = False
-                            st.rerun()
-                with col2:
-                    if st.button("Nej, annuller", key="confirm_no"):
-                        st.session_state.confirm_indberet = False
-                        st.info("Indberetning annulleret")
-                        st.rerun()
+        if save_submission(emp['Name'], data):
+            if data['udfyldt']:
+                st.success("✅ Indberettet!")
+                st.balloons()
+                st.session_state.indberet_state = 'idle'
             else:
-                if save_submission(emp['Name'], data):
-                    st.success("✅ Indberettet!")
-                    st.balloons()
-                    st.session_state.confirm_indberet = False
-        else:
-            if save_submission(emp['Name'], data):
                 st.success("Gemt!")
-                st.session_state.confirm_indberet = False
 
 def main():
     if st.query_params.get("admin") == "true":
