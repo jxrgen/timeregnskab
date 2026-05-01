@@ -370,43 +370,42 @@ def employee_form():
     
     st.markdown("---")
     
-    if 'indberet_state' not in st.session_state:
-        st.session_state.indberet_state = 'idle'
-        st.session_state.indberet_cb = existing.get('udfyldt', False) if existing else False
+    # Initialize session state
+    if 'indberet_confirmed' not in st.session_state:
         st.session_state.indberet_confirmed = existing.get('udfyldt', False) if existing else False
+    if 'show_confirm' not in st.session_state:
+        st.session_state.show_confirm = False
     
-    # Red border around checkbox
+    # Checkbox with red border - use st.error or st.warning for visual indication
     st.markdown('<div style="border: 2px solid red; padding: 10px; border-radius: 5px; margin: 10px 0;">', unsafe_allow_html=True)
-    st.checkbox("Marker for at indberette", value=st.session_state.indberet_cb, key="indberet_cb")
+    indberet = st.checkbox("Marker for at indberette", value=st.session_state.indberet_confirmed, key="indberet_cb")
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Handle checkbox state changes
-    if st.session_state.indberet_cb and st.session_state.indberet_state == 'idle':
-        st.session_state.indberet_state = 'confirming'
-        st.rerun()
+    # Show confirmation popup when checkbox is checked
+    if indberet and not st.session_state.indberet_confirmed and not st.session_state.show_confirm:
+        st.session_state.show_confirm = True
     
-    if not st.session_state.indberet_cb and st.session_state.indberet_confirmed:
+    # Reset if checkbox is unchecked
+    if not indberet:
         st.session_state.indberet_confirmed = False
-        st.session_state.indberet_state = 'idle'
+        st.session_state.show_confirm = False
     
     # Confirmation popup
-    if st.session_state.indberet_state == 'confirming':
+    if st.session_state.show_confirm:
         st.warning("⚠️ Vil du indberette nu?")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Ja, indberet nu", key="confirm_yes"):
                 st.session_state.indberet_confirmed = True
-                st.session_state.indberet_state = 'confirmed'
-                st.rerun()
+                st.session_state.show_confirm = False
         with col2:
             if st.button("Nej, annuller", key="confirm_no"):
                 st.session_state.indberet_confirmed = False
-                st.session_state.indberet_state = 'idle'
+                st.session_state.show_confirm = False
                 st.session_state.indberet_cb = False
-                st.rerun()
         st.markdown("---")
     
-    data['udfyldt'] = st.session_state.get('indberet_confirmed', False)
+    data['udfyldt'] = st.session_state.indberet_confirmed
     
     if st.button("Gem"):
         data['timestamp'] = datetime.now().isoformat()
