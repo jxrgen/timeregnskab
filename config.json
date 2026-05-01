@@ -1,4 +1,9 @@
 {
   "submission_deadline_day": 20,
-  "admin_notification_day": 25
+  "admin_notification_day": 25,
+  "smtp_server": "send.one.com",
+  "smtp_port": 465,
+  "smtp_username": "timereg@vimby.dk",
+  "smtp_password": "1lnrmxpfltl!",
+  "admin_email": "timereg@vimby.dk"
 }
