@@ -30,22 +30,29 @@ def send_email(to_email, subject, body, smtp_config):
 def main():
     repo_owner = os.getenv("REPO_OWNER")
     repo_name = os.getenv("REPO_NAME")
-    admin_email = os.getenv("ADMIN_EMAIL")
     app_url = os.getenv("APP_URL", "https://your-app.streamlit.app")
-    
-    # Optional SMTP for summary email
-    smtp_config = None
-    if os.getenv("SMTP_USERNAME"):
-        smtp_config = {
-            'server': os.getenv("SMTP_SERVER", "smtp.gmail.com"),
-            'port': os.getenv("SMTP_PORT", "587"),
-            'username': os.getenv("SMTP_USERNAME"),
-            'password': os.getenv("SMTP_PASSWORD")
-        }
     
     # GitHub client
     g = Github(os.getenv("GITHUB_TOKEN"))
     repo = g.get_user(repo_owner).get_repo(repo_name)
+    
+    # Load config from config.json
+    smtp_config = None
+    admin_email = None
+    try:
+        content = repo.get_contents("config.json")
+        import base64
+        config = json.loads(base64.b64decode(content.content).decode('utf-8'))
+        if config.get('smtp_username') and config.get('smtp_password'):
+            smtp_config = {
+                'server': config.get('smtp_server', 'smtp.gmail.com'),
+                'port': config.get('smtp_port', 587),
+                'username': config.get('smtp_username', ''),
+                'password': config.get('smtp_password', '')
+            }
+        admin_email = config.get('admin_email', '')
+    except Exception as e:
+        print(f"Kunne ikke indlæse config.json: {e}")
     
     # Load employees
     content = repo.get_contents("employees.csv")

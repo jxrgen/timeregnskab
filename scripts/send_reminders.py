@@ -33,15 +33,27 @@ def main():
     repo_name = os.getenv("REPO_NAME")
     app_url = os.getenv("APP_URL", "https://your-app.streamlit.app")
     
-    smtp_config = {
-        'server': os.getenv("SMTP_SERVER", "smtp.gmail.com"),
-        'port': os.getenv("SMTP_PORT", "587"),
-        'username': os.getenv("SMTP_USERNAME"),
-        'password': os.getenv("SMTP_PASSWORD")
-    }
+    # Load SMTP config from config.json
+    g = Github(os.getenv("GITHUB_TOKEN"))
+    repo = g.get_user(repo_owner).get_repo(repo_name)
     
-    if not all(smtp_config.values()):
-        print("SMTP config mangler")
+    smtp_config = {}
+    try:
+        content = repo.get_contents("config.json")
+        import base64
+        config = json.loads(base64.b64decode(content.content).decode('utf-8'))
+        smtp_config = {
+            'server': config.get('smtp_server', 'smtp.gmail.com'),
+            'port': config.get('smtp_port', 587),
+            'username': config.get('smtp_username', ''),
+            'password': config.get('smtp_password', ''),
+            'admin_email': config.get('admin_email', '')
+        }
+    except Exception as e:
+        print(f"Kunne ikke indlæse config.json: {e}")
+    
+    if not all([smtp_config.get('username'), smtp_config.get('password')]):
+        print("SMTP config mangler i config.json")
         return
     
     # GitHub client

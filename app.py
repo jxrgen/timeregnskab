@@ -101,6 +101,34 @@ def save_submission(employee_name, data, month=None):
 def generate_token():
     return secrets.token_urlsafe(16)
 
+def load_config():
+    try:
+        g = get_github_client()
+        if g:
+            repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
+            content = repo.get_contents("config.json")
+            import base64
+            return json.loads(base64.b64decode(content.content).decode('utf-8'))
+    except:
+        pass
+    return {"submission_deadline_day": 20, "admin_notification_day": 25}
+
+def save_config(config):
+    try:
+        g = get_github_client()
+        if g:
+            repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
+            content = json.dumps(config, ensure_ascii=False, indent=2)
+            try:
+                file = repo.get_contents("config.json")
+                repo.update_file("config.json", "Opdateret konfiguration", content, file.sha)
+            except:
+                repo.create_file("config.json", "Oprettet konfiguration", content)
+            return True
+    except Exception as e:
+        st.error(f"Kunne ikke gemme konfiguration: {str(e)}")
+    return False
+
 def admin_interface():
     st.title("⚙️ Admin Interface")
     admin_password = st.secrets.get("ADMIN_PASSWORD", "admin123")
@@ -111,6 +139,48 @@ def admin_interface():
         return
     
     st.success("Velkommen til admin interface")
+    st.markdown("**Funktionalitet:** Her kan du administrere medarbejdere, tilføje nye og se indsendelser. Du kan også ændre generelle indstillinger for tidsfrister og notifikationer.")
+    
+    config = load_config()
+    
+    st.subheader("Instruktioner og overordnede indstillinger")
+    st.write(f"Medarbejderne skal indberette deres skema senest d. {config.get('submission_deadline_day', 20)} i hver måned. Hvis en medarbejder ikke har gjort det, vil der automatisk blive sendt en påmindelsesmail til vedkommende. Alle skemaer vil blive sendt til administratoren d. {config.get('admin_notification_day', 25)} i måneden.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        new_deadline = st.number_input("Seneste indberetningsdag (XX)", min_value=1, max_value=31, value=config.get('submission_deadline_day', 20))
+    with col2:
+        new_notification = st.number_input("Dag for afsendelse til admin (XX)", min_value=1, max_value=31, value=config.get('admin_notification_day', 25))
+    
+    if st.button("Gem indstillinger"):
+        config['submission_deadline_day'] = new_deadline
+        config['admin_notification_day'] = new_notification
+        if save_config(config):
+            st.success("Indstillinger gemt!")
+            st.rerun()
+    
+    st.subheader("SMTP Email-indstillinger")
+    st.info("Disse indstillinger bruges til at sende påmindelser og notifikationer via GitHub Actions.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        smtp_server = st.text_input("SMTP Server", value=config.get('smtp_server', 'smtp.gmail.com'))
+        smtp_port = st.number_input("SMTP Port", value=int(config.get('smtp_port', 587)), min_value=1, max_value=65535)
+        smtp_username = st.text_input("SMTP Brugernavn (email)", value=config.get('smtp_username', ''))
+    with col2:
+        smtp_password = st.text_input("SMTP Password (app password)", value=config.get('smtp_password', ''), type="password")
+        admin_email = st.text_input("Admin Email (modtager)", value=config.get('admin_email', ''))
+    
+    if st.button("Gem SMTP-indstillinger"):
+        config['smtp_server'] = smtp_server
+        config['smtp_port'] = smtp_port
+        config['smtp_username'] = smtp_username
+        config['smtp_password'] = smtp_password
+        config['admin_email'] = admin_email
+        if save_config(config):
+            st.success("SMTP-indstillinger gemt!")
+            st.rerun()
+    
     df = load_employees()
     
     if df.empty:
@@ -249,37 +319,60 @@ def employee_form():
     
     existing = load_submission(emp['Name'])
     
-    with st.form("time_form"):
-        data = {}
+    data = {}
+    
+    if emp['Feriedage']:
+        data['feriedage'] = st.number_input("Feriedage", value=existing.get('feriedage', 0) if existing else 0, min_value=0)
+    if emp['Feriefridag']:
+        data['feriefridag'] = st.number_input("Feriefridage", value=existing.get('feriefridag', 0) if existing else 0, min_value=0)
+    if emp['Sygedage']:
+        data['sygedage'] = st.number_input("Sygedage", value=existing.get('sygedage', 0) if existing else 0, min_value=0)
+    if emp['Ekstra_Hverdag']:
+        data['ekstra_hverdag'] = st.number_input("Ekstra timer (Hverdag)", value=existing.get('ekstra_hverdag', 0) if existing else 0, min_value=0)
+    if emp['Ekstra_Lørdag']:
+        data['ekstra_lørdag'] = st.number_input("Ekstra timer (Lørdag)", value=existing.get('ekstra_lørdag', 0) if existing else 0, min_value=0)
+    if emp['Ekstra_Søndag']:
+        data['ekstra_søndag'] = st.number_input("Ekstra timer (Søndag)", value=existing.get('ekstra_søndag', 0) if existing else 0, min_value=0)
+    if emp['Ekstra_Andet']:
+        data['ekstra_andet'] = st.number_input("Ekstra timer (Andet)", value=existing.get('ekstra_andet', 0) if existing else 0, min_value=0)
+    if emp['Antal_timer']:
+        data['antal_timer'] = st.number_input("Antal timer i alt", value=existing.get('antal_timer', 0) if existing else 0, min_value=0)
+    
+    st.markdown('<span style="color:red; font-weight:bold">Indberet</span>', unsafe_allow_html=True)
+    indberet = st.checkbox(" ", value=existing.get('udfyldt', False) if existing else False, key="indberet")
+    data['udfyldt'] = indberet
+    
+    if st.button("Gem"):
+        data['timestamp'] = datetime.now().isoformat()
+        data['employee'] = emp['Name']
+        data['month'] = get_month_name()
         
-        if emp['Feriedage']:
-            data['feriedage'] = st.number_input("Feriedage", value=existing.get('feriedage', 0) if existing else 0, min_value=0)
-        if emp['Feriefridag']:
-            data['feriefridag'] = st.number_input("Feriefridage", value=existing.get('feriefridag', 0) if existing else 0, min_value=0)
-        if emp['Sygedage']:
-            data['sygedage'] = st.number_input("Sygedage", value=existing.get('sygedage', 0) if existing else 0, min_value=0)
-        if emp['Ekstra_Hverdag']:
-            data['ekstra_hverdag'] = st.number_input("Ekstra timer (Hverdag)", value=existing.get('ekstra_hverdag', 0) if existing else 0, min_value=0)
-        if emp['Ekstra_Lørdag']:
-            data['ekstra_lørdag'] = st.number_input("Ekstra timer (Lørdag)", value=existing.get('ekstra_lørdag', 0) if existing else 0, min_value=0)
-        if emp['Ekstra_Søndag']:
-            data['ekstra_søndag'] = st.number_input("Ekstra timer (Søndag)", value=existing.get('ekstra_søndag', 0) if existing else 0, min_value=0)
-        if emp['Ekstra_Andet']:
-            data['ekstra_andet'] = st.number_input("Ekstra timer (Andet)", value=existing.get('ekstra_andet', 0) if existing else 0, min_value=0)
-        if emp['Antal_timer']:
-            data['antal_timer'] = st.number_input("Antal timer i alt", value=existing.get('antal_timer', 0) if existing else 0, min_value=0)
-        
-        data['udfyldt'] = st.checkbox("Udfyldt (marker når færdig)", value=existing.get('udfyldt', False) if existing else False)
-        
-        submitted = st.form_submit_button("Gem")
-        if submitted:
-            data['timestamp'] = datetime.now().isoformat()
-            data['employee'] = emp['Name']
-            data['month'] = get_month_name()
+        if indberet:
+            if not st.session_state.get('confirm_indberet', False):
+                st.session_state.confirm_indberet = True
+                st.warning("⚠️ Er du sikker på at du vil indberette nu?")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Ja, indberet nu", key="confirm_yes"):
+                        if save_submission(emp['Name'], data):
+                            st.success("✅ Indberettet!")
+                            st.balloons()
+                            st.session_state.confirm_indberet = False
+                            st.rerun()
+                with col2:
+                    if st.button("Nej, annuller", key="confirm_no"):
+                        st.session_state.confirm_indberet = False
+                        st.info("Indberetning annulleret")
+                        st.rerun()
+            else:
+                if save_submission(emp['Name'], data):
+                    st.success("✅ Indberettet!")
+                    st.balloons()
+                    st.session_state.confirm_indberet = False
+        else:
             if save_submission(emp['Name'], data):
                 st.success("Gemt!")
-                if data['udfyldt']:
-                    st.balloons()
+                st.session_state.confirm_indberet = False
 
 def main():
     if st.query_params.get("admin") == "true":
