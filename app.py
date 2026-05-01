@@ -309,8 +309,12 @@ def admin_interface():
             body = "Dette er en test email for at verificere SMTP-indstillingerne."
             msg.attach(MIMEText(body, "plain", "utf-8"))
             
-            server = smtplib.SMTP(smtp_server, int(smtp_port))
-            server.starttls()
+            port = int(smtp_port)
+            if port == 465:
+                server = smtplib.SMTP_SSL(smtp_server, port)
+            else:
+                server = smtplib.SMTP(smtp_server, port)
+                server.starttls()
             server.login(smtp_username, smtp_password)
             server.send_message(msg)
             server.quit()

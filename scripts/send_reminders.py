@@ -17,8 +17,12 @@ def send_email(to_email, subject, body, smtp_config):
         
         msg.attach(MIMEText(body, 'plain', 'utf-8'))
         
-        server = smtplib.SMTP(smtp_config['server'], int(smtp_config['port']))
-        server.starttls()
+        port = int(smtp_config['port'])
+        if port == 465:
+            server = smtplib.SMTP_SSL(smtp_config['server'], port)
+        else:
+            server = smtplib.SMTP(smtp_config['server'], port)
+            server.starttls()
         server.login(smtp_config['username'], smtp_config['password'])
         server.send_message(msg)
         server.quit()
