@@ -370,54 +370,13 @@ def employee_form():
     
     st.markdown("---")
     
-    # Initialize session state
-    if 'indberet_confirmed' not in st.session_state:
-        st.session_state.indberet_confirmed = existing.get('udfyldt', False) if existing else False
-    if 'pending_confirm' not in st.session_state:
-        st.session_state.pending_confirm = False
+    # Red text for indberet
+    st.error("**Indberet**")
     
-    # Show red warning box
-    if not st.session_state.indberet_confirmed:
-        st.error("**Marker for at indberette**")
+    # Checkbox - simple, no popup
+    indberet = st.checkbox("Marker for at indberette", value=existing.get('udfyldt', False) if existing else False, key="indberet_cb")
     
-    # Checkbox
-    indberet = st.checkbox(
-        "Marker for at indberette" if not st.session_state.indberet_confirmed else "Allerede indberettet",
-        value=st.session_state.indberet_confirmed,
-        key="indberet_cb",
-        disabled=st.session_state.indberet_confirmed
-    )
-    
-    # If unchecked after being confirmed
-    if not indberet and st.session_state.indberet_confirmed:
-        st.session_state.indberet_confirmed = False
-        st.session_state.pending_confirm = False
-    
-    # If checked but not confirmed, show confirmation
-    if indberet and not st.session_state.indberet_confirmed:
-        st.session_state.pending_confirm = True
-    
-    # Confirmation popup
-    if st.session_state.pending_confirm and not st.session_state.indberet_confirmed:
-        st.warning("⚠️ Vil du indberette nu?")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Ja, indberet nu", key="confirm_yes"):
-                st.session_state.indberet_confirmed = True
-                st.session_state.pending_confirm = False
-        with col2:
-            if st.button("Nej, annuller", key="confirm_no"):
-                st.session_state.pending_confirm = False
-                st.session_state.indberet_cb = False
-        st.markdown("---")
-    
-    # Fortryd button if already confirmed
-    if st.session_state.indberet_confirmed:
-        if st.button("Fortryd indberetning"):
-            st.session_state.indberet_confirmed = False
-            st.session_state.pending_confirm = False
-    
-    data['udfyldt'] = st.session_state.indberet_confirmed
+    data['udfyldt'] = indberet
     
     if st.button("Gem"):
         data['timestamp'] = datetime.now().isoformat()
@@ -428,7 +387,6 @@ def employee_form():
             if data['udfyldt']:
                 st.success("✅ Indberettet!")
                 st.balloons()
-                st.session_state.indberet_state = 'idle'
             else:
                 st.success("Gemt!")
 
