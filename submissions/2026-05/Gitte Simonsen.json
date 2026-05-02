@@ -2,8 +2,8 @@
   "feriedage": 4,
   "feriefridag": 1,
   "sygedage": 1,
-  "udfyldt": false,
-  "timestamp": "2026-05-02T06:39:15.641243",
+  "udfyldt": true,
+  "timestamp": "2026-05-02T06:39:22.165515",
   "employee": "Gitte Simonsen",
   "month": "2026-05"
 }
