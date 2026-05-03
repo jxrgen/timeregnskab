@@ -49,3 +49,6 @@ Streamlit Cloud app for automated time tracking with individual employee access 
 - `employees.csv` - Employee list
 - `submissions/YYYY-MM/` - JSON files per employee per month
 - `summary/YYYY-MM.csv` - Aggregated data per month
+
+## Startup instruction
+Always read `CONVERSATION_LOG.md` at the start of each session to understand recent work and continue from where we left off.
