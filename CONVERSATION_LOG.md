@@ -95,3 +95,10 @@ Dato: 30. april 2026 (opdateret 1. maj 2026)
 3. Konfigurer GitHub Repository Secrets (SMTP settings)
 4. Tilføj medarbejdere via admin interface (`?admin=true`)
 5. Send links til medarbejdere
+
+## Session 3. maj 2026
+- Bruger spurgte om status på seneste ændringer (læst CONVERSATION_LOG.md)
+- Bruger spurgte om tidspunkt for automatiske mails (påmindelser og dataopsamling)
+- Oplyst at mails sendes den 20. i måneden kl. 08:00 UTC (09:00 CET / 10:00 CEST)
+- Bruger oplyste at have rettet workflow for dataopsamling den 25. som test
+- Ingen kodeændringer i denne session
