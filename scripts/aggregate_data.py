@@ -125,6 +125,33 @@ def main():
     print(f"Summary gemt: {summary_path}")
     print(summary_df.to_string())
     
+    # Backup: Flyt submissions til archive mappe
+    backup_path = f"archive/{month_name}"
+    try:
+        # Opret archive mappe hvis den ikke findes
+        repo.create_file(f"{backup_path}/.keep", f"Oprettet archive mappe for {month_name}", "")
+    except:
+        pass  # Mappen findes allerede
+    
+    for _, emp in df.iterrows():
+        if not emp['Active']:
+            continue
+        
+        try:
+            submission_path = f"submissions/{month_name}/{emp['Name']}.json"
+            content = repo.get_contents(submission_path)
+            
+            # Flyt til archive
+            import base64
+            file_content = base64.b64decode(content.content).decode('utf-8')
+            repo.create_file(f"{backup_path}/{emp['Name']}.json", f"Arkiveret {month_name}/{emp['Name']}", file_content)
+            repo.delete_file(submission_path, f"Slettet efter arkivering {submission_path}", content.sha)
+            print(f"Arkiveret: {emp['Name']}")
+        except:
+            pass  # Ingen submission for denne medarbejder
+    
+    print(f"Backup fuldført for {month_name}")
+    
     # Send email to admin
     if admin_email and smtp_config:
         subject = f"Timeregnskab opsummering - {month_name}"

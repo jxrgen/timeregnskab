@@ -3,7 +3,7 @@ import pandas as pd
 import os
 from github import Github
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import secrets
 
 st.set_page_config(page_title="Timeregnskab", page_icon="📊", layout="wide")
@@ -62,6 +62,22 @@ def save_employees(df):
 def get_month_name():
     now = datetime.now()
     return f"{now.year}-{now.month:02d}"
+
+def get_available_months():
+    """Returnerer liste af tilgængelige måneder (seneste 12 + næste)"""
+    now = datetime.now()
+    months = []
+    for i in range(-1, 12):  # Fra sidste måned til 12 måneder frem
+        date = now.replace(day=1) + timedelta(days=32*i)
+        if i < 0:
+            date = now.replace(day=1) - timedelta(days=1)
+            date = date.replace(day=1)
+            for _ in range(abs(i)-1):
+                date = date - timedelta(days=1)
+                date = date.replace(day=1)
+        date = date.replace(day=1)
+        months.append(f"{date.year}-{date.month:02d}")
+    return months
 
 def load_submission(employee_name, month=None):
     if month is None:
@@ -414,10 +430,23 @@ def employee_form():
         return
     
     emp = employee.iloc[0]
-    st.title(f"Timeregnskab - {emp['Name']}")
-    st.write(f"Måned: {get_month_name()}")
     
-    existing = load_submission(emp['Name'])
+    # Månedsvælger med dropdown
+    available_months = get_available_months()
+    current_month = get_month_name()
+    
+    # Tjek om der er en gemt måned i query params
+    selected_month = st.query_params.get("month", current_month)
+    if selected_month not in available_months:
+        selected_month = current_month
+    
+    selected_month = st.selectbox("Vælg måned", available_months, index=available_months.index(selected_month))
+    st.query_params["month"] = selected_month
+    
+    st.title(f"Timeregnskab - {emp['Name']}")
+    st.write(f"Måned: {selected_month}")
+    
+    existing = load_submission(emp['Name'], selected_month)
     
     data = {}
     
@@ -451,9 +480,9 @@ def employee_form():
     if st.button("Gem"):
         data['timestamp'] = datetime.now().isoformat()
         data['employee'] = emp['Name']
-        data['month'] = get_month_name()
+        data['month'] = selected_month
         
-        if save_submission(emp['Name'], data):
+        if save_submission(emp['Name'], data, selected_month):
             if data['udfyldt']:
                 st.success("✅ Indberettet!")
                 st.balloons()

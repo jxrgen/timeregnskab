@@ -102,3 +102,18 @@ Dato: 30. april 2026 (opdateret 1. maj 2026)
 - Oplyst at mails sendes den 20. i måneden kl. 08:00 UTC (09:00 CET / 10:00 CEST)
 - Bruger oplyste at have rettet workflow for dataopsamling den 25. som test
 - Ingen kodeændringer i denne session
+
+## Session 3. maj 2026 (senere)
+- Tilføjet startup instruks til AGENTS.md (auto-læs CONVERSATION_LOG.md)
+- Fjernet `get_employee_month()` fra app.py (viste næste måned efter d. 25.)
+- Tilføjet dropdown menu til månedsvælgelse i medarbejderformular
+- Måned huskes via query parameter `?month=YYYY-MM`
+- Beholdt arkivering i `aggregate_data.py` (flytter til `archive/YYYY-MM/`)
+- Backup taget: `backup/2026-05-03_18-47-08/` (før push)
+- **Backup procedure**: Tag altid backup til `backup/YYYY-MM-DD_HH-MM-SS/` før push
+
+### Ændrede filer
+- `app.py` - Dropdown til månedsvælgelse, fjernet auto-måned skift
+- `scripts/aggregate_data.py` - Arkivering af submissions efter aggregation
+- `AGENTS.md` - Startup instruks til auto-læsning af log
+- `CONVERSATION_LOG.md` - Denne log
