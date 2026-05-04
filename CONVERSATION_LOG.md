@@ -157,3 +157,40 @@ Dato: 30. april 2026 (opdateret 1. maj 2026)
 
 ### Ændrede filer
 - `app.py` - Tilføjet tab5 "Systeminfo" med relevante systemoplysninger
+
+## Session 4. maj 2026 (Påmindelsesmail rettelser)
+- Bruger testede manuel kørsel af workflow (gh workflow run reminders.yml)
+- Påmindelsesmail havde flere fejl:
+  1. Viste "2026-05" i stedet for "Maj 2026"
+  2. Fristen stod fast som "den 25." (skal bruge variabel)
+  3. URL manglede (kun "/?token=..." uden domæne)
+  4. Afsender var for upersonlig ("Administrationen")
+- **Løsning i send_reminders.py**:
+  - Månedsnavn nu med `now.strftime("%B %Y")` (f.eks. "Maj 2026")
+  - Fristen bruger `deadline_day` variabel fra config
+  - URL bruger `app_url` korrekt og fjerner trailing slash
+  - Tilføjet 20 sjove afsendernavne (vælges tilfældigt per mail):
+    - din digitale påminder
+    - the central scrutinizer
+    - den store EDB-maskine der styrer alting
+    - en ganske automatiseret udsendelsestjeneste
+    - bzzzcrrtping...
+    - den elektroniske brevdue
+    - Robotten fra afdeling 7
+    - Den Digitale Timeregnskabs-Politi
+    - System 32 (ja, det kører stadig)
+    - Den Autonome Påmindelses-Enhed
+    - Overlord 3000 - Påmindelsesmodul
+    - Den mystiske mail-mand
+    - Tidsmaskinen T-800
+    - Den travle administrative algoritme
+    - Kvorums-gnomen
+    - Den digitale klipper
+    - Pakke-Post-Peter
+    - Sir Sender af Camelot
+    - Den flyvende hollandsk rapport
+    - Den uundgåelige notifikation
+- Push: commit `Rettet påmindelsesmail: månedsnavn, dynamisk frist, komplet URL, sjove afsendere`
+
+### Ændrede filer
+- `scripts/send_reminders.py` - Rettet mail-formatering og tilføjet sjove afsendere
