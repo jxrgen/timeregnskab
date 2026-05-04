@@ -163,7 +163,7 @@ def admin_interface():
         st.warning("Kunne ikke indlæse medarbejdere")
         return
     
-    tab1, tab2, tab3, tab4 = st.tabs(["Medarbejdere", "Tilføj ny", "Indsendelser", "Fælles besked"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Medarbejdere", "Tilføj ny", "Indsendelser", "Fælles besked", "Systeminfo"])
     
     with tab1:
         st.subheader("Eksisterende medarbejdere")
@@ -338,6 +338,61 @@ def admin_interface():
                         st.success(f"✅ Besked sendt til {sent_count} medarbejder(e)!")
                     if error_count > 0:
                         st.warning(f"Kunne ikke sende til {error_count} medarbejder(e)")
+    
+    with tab5:
+        st.subheader("Systeminfo")
+        
+        config = load_config()
+        
+        # Repository info
+        st.markdown("### Repository")
+        st.write(f"**Owner:** {REPO_OWNER}")
+        st.write(f"**Repository:** {REPO_NAME}")
+        app_url = st.secrets.get("APP_URL", "Ikke konfigureret")
+        st.write(f"**App URL:** {app_url}")
+        
+        # Admin settings
+        st.markdown("### Indstillinger")
+        st.write(f"**Seneste indberetningsdag:** Den {config.get('submission_deadline_day', 3)}. i måneden")
+        st.write(f"**Admin notifikationsdag:** Den {config.get('admin_notification_day', 25)}. i måneden")
+        
+        # SMTP info
+        st.markdown("### SMTP / Email")
+        st.write(f"**SMTP Server:** {config.get('smtp_server', 'Ikke sat')}")
+        st.write(f"**SMTP Port:** {config.get('smtp_port', 'Ikke sat')}")
+        st.write(f"**SMTP Brugernavn:** {config.get('smtp_username', 'Ikke sat')}")
+        password = config.get('smtp_password', '')
+        if password:
+            st.write(f"**SMTP Password:** {'*' * len(password)} (skjult)")
+        else:
+            st.write("**SMTP Password:** Ikke sat")
+        st.write(f"**Admin Email:** {config.get('admin_email', 'Ikke sat')}")
+        
+        # Employees
+        st.markdown("### Medarbejdere")
+        if not df.empty:
+            for idx, row in df.iterrows():
+                with st.expander(f"{row['Name']} ({'Aktiv' if row['Active'] else 'Inaktiv'})"):
+                    st.write(f"**Email:** {row['Email']}")
+                    st.write(f"**Token:** `{row['Token']}`")
+                    
+                    params = []
+                    if row['Feriedage']: params.append("Feriedage")
+                    if row['Feriefridag']: params.append("Feriefridag")
+                    if row['Sygedage']: params.append("Sygedage")
+                    if row['Ekstra_Hverdag']: params.append("Ekstra Hverdag")
+                    if row['Ekstra_Lørdag']: params.append("Ekstra Lørdag")
+                    if row['Ekstra_Søndag']: params.append("Ekstra Søndag")
+                    if row['Ekstra_Andet']: params.append("Ekstra Andet")
+                    if row['Antal_timer']: params.append("Antal timer")
+                    
+                    st.write(f"**Parametre:** {', '.join(params) if params else 'Ingen'}")
+        
+        # GitHub Actions info
+        st.markdown("### GitHub Actions")
+        st.info("Workflows kører dagligt kl. 08:00 UTC og tjekker om dags dato matcher konfigurationen.")
+        st.write("**Reminders workflow:** `.github/workflows/reminders.yml`")
+        st.write("**Aggregate workflow:** `.github/workflows/aggregate.yml`")
     
     st.divider()
     
