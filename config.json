@@ -1,5 +1,5 @@
 {
-  "submission_deadline_day": 4,
+  "submission_deadline_day": 3,
   "admin_notification_day": 5,
   "smtp_server": "send.one.com",
   "smtp_port": 465,
