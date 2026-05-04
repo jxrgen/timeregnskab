@@ -1,0 +1,36 @@
+Tidsregistrerings-flow (2 måneder ad gangen)
+
+Medarbejderen arbejder i en måned fra 1. til sidste dag, men skal kunne forholde sig til overgangen mellem måneder.
+
+Flow-oversigt
+
+| Periode | Handling | Månedsvisning |
+|---------|----------|---------------|
+| 1.-19. i måneden | Medarbejder udfylder timer for indeværende måned | Kun indeværende måned |
+| 20. i måneden | **Frist for indberetning** - medarbejder markerer "Indberet" | Indeværende + næste måned |
+| 21.-24. i måneden | Medarbejder kan stadig rette i indeværende måned | Indeværende + næste måned |
+| 25. i måneden | **Admin modtager data** - aggregation kører | Indeværende + næste måned |
+| 26.-sidste i måneden | Medarbejder udfylder timer for sidste dage → overføres til næste måned | Indeværende + næste måned |
+| 1. i næste måned | Overførte timer vises i næste måneds skema | Næste + næste næste måned |
+
+Hvordan det virker
+
+1. Medarbejderen har adgang til **to måneders skemaer** samtidigt (f.eks. Maj + Juni)
+2. Ved månedsskift: Timer udfyldt i sidste dage af Maj overføres automatisk som "Overført fra Maj" i Junis skema
+3. Når medarbejderen har indberettet (markeret "Indberet"), låses skemaet for redigering efter admin-notifikationsdagen (25.)
+4. Admin modtager det samlede overblik den 25. med alle registrerede timer
+
+Teknisk implementering
+
+- `current_month` og `next_month` vises begge i formularen
+- Timer fra `current_month` (dag 26-sidste) gemmes i en separat "overførsel"-fil
+- Ved månedsskift læses overførslen ind i `next_month` skemaet
+- Aggregation den 25. tager kun `current_month` (ikke overførte timer)
+
+Konfiguration
+
+Datoerne for frist (indberetning) og admin-notifikation bestemmes af variablerne:
+- `submission_deadline_day` - dagen hvor medarbejdere skal have indberettet (standard: 20.)
+- `admin_notification_day` - dagen hvor admin modtager data (standard: 25.)
+
+Begge datoer kan ændres i admin interface under Indstillinger.

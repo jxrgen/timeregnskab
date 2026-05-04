@@ -199,3 +199,46 @@ Dato: 30. april 2026 (opdateret 1. maj 2026)
 - **Husk at fikse noget med de måneder, der skal registreres** (bruger vil uddybe næste session)
 
 ## Session afsluttet 4. maj 2026
+
+## Session 4. maj 2026 (2 måneders skemaer)
+- Bruger ønskede implementering af 2 måneders skemaer ad gangen
+- Formål: Medarbejderen skal kunne udfylde timer for sidste dage i måneden og overføre til næste måned
+- **Flow**:
+  - Medarbejder ser indeværende måned + næste måned side om side
+  - Når indeværende måned indberettes, overføres data til næste måned
+  - Overførselsdata gemmes i `transfer_employee.json` filer
+  - Fristdatoer (indberetning og admin-notifikation) bruger variabler fra config
+- **Backup taget**: `backup af funktionelt system/` (før ændringer)
+- **Nye filer**: `tidsregistrerings-flow.txt` (dokumentation af det nye flow)
+- **Ændrede filer**:
+  - `app.py` - Implementeret 2 måneders visning, overførselsdata, fjernet gammel månedsvælger
+  - `tidsregistrerings-flow.txt` - Ny fil med forklaring på det nye flow
+  - `CONVERSATION_LOG.md` - Denne log
+
+### Implementeringsdetaljer
+- `get_next_month()` og `get_previous_month()` funktioner tilføjet
+- `load_transfer_data()` og `save_transfer_data()` til håndtering af overførsel
+- Medarbejderformular viser nu to kolonner (indeværende + næste måned)
+- Overført data vises som "🔄 Overført fra [måned]" i næste måneds kolonne
+- Indberet-knap kun synlig for indeværende måned
+- Datoer for frister hentes dynamisk fra config.json (submission_deadline_day, admin_notification_day)
+
+### Tilbage-rulning
+Hvis den nye implementering ikke virker, kan du rulle tilbage ved at kopiere filer fra `backup af funktionelt system/` mappen.
+
+## Session 4. maj 2026 (Dansk månedsformat)
+- Ændret visning af måneder til dansk format (f.eks. "Maj 2026" i stedet for "2026-05")
+- Tilføjet `format_month_danish()` funktion der konverterer YYYY-MM til dansk
+- Opdateret medarbejderformular til at vise "📆 Maj 2026" i overskriften
+- Opdateret admin interface (tab3 "Indsendelser") til at bruge dansk månedsformat i dropdown
+- **Ændrede filer**:
+  - `app.py` - Tilføjet `format_month_danish()`, opdateret visning af måneder
+
+## Session 4. maj 2026 (Sjove afsendere på indberet)
+- Tilføjet 20 nye sjove afsendere til "Marker for at indberette" checkboxen (nu 40 i alt)
+- Checkboxen viser nu en tilfældig afsender hver gang (f.eks. "Marker for at indberette til den store EDB-maskine")
+- Checkbox er nu `value=False` som default (ikke aktiv som standard)
+- **Ændrede filer**:
+  - `app.py` - Opdateret indberet checkbox med `random.choice()` og `value=False`
+
+## Session afsluttet 4. maj 2026 (seneste - fortsæt herfra næste gang)

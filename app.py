@@ -63,22 +63,6 @@ def get_month_name():
     now = datetime.now()
     return f"{now.year}-{now.month:02d}"
 
-def get_available_months():
-    """Returnerer liste af tilgængelige måneder (seneste 12 + næste)"""
-    now = datetime.now()
-    months = []
-    for i in range(-1, 12):  # Fra sidste måned til 12 måneder frem
-        date = now.replace(day=1) + timedelta(days=32*i)
-        if i < 0:
-            date = now.replace(day=1) - timedelta(days=1)
-            date = date.replace(day=1)
-            for _ in range(abs(i)-1):
-                date = date - timedelta(days=1)
-                date = date.replace(day=1)
-        date = date.replace(day=1)
-        months.append(f"{date.year}-{date.month:02d}")
-    return months
-
 def load_submission(employee_name, month=None):
     if month is None:
         month = get_month_name()
@@ -261,7 +245,12 @@ def admin_interface():
     
     with tab3:
         st.subheader("Indsendelser")
-        month = st.selectbox("Vælg måned", [get_month_name(), "2026-03", "2026-02"])
+        # Brug de seneste 3 måneder med dansk format
+        current = get_month_name()
+        months_options = [current, get_previous_month(current), get_previous_month(get_previous_month(current))]
+        month_labels = [format_month_danish(m) for m in months_options]
+        selected_idx = st.selectbox("Vælg måned", range(len(month_labels)), format_func=lambda i: month_labels[i])
+        month = months_options[selected_idx]
         if not df.empty:
             for idx, row in df.iterrows():
                 if row['Active']:
@@ -464,6 +453,69 @@ def admin_interface():
         except Exception as e:
             st.error(f"❌ Kunne ikke sende test-email: {str(e)}")
  
+def get_next_month(month_str):
+    """Returnerer næste måned som YYYY-MM"""
+    year, month = map(int, month_str.split('-'))
+    if month == 12:
+        return f"{year + 1}-01"
+    return f"{year}-{month + 1:02d}"
+
+def get_previous_month(month_str):
+    """Returnerer forrige måned som YYYY-MM"""
+    year, month = map(int, month_str.split('-'))
+    if month == 1:
+        return f"{year - 1}-12"
+    return f"{year}-{month - 1:02d}"
+
+def format_month_danish(month_str):
+    """Konverterer YYYY-MM til dansk månedsformat (f.eks. 'Maj 2026')"""
+    months_da = {
+        1: 'Januar', 2: 'Februar', 3: 'Marts', 4: 'April',
+        5: 'Maj', 6: 'Juni', 7: 'Juli', 8: 'August',
+        9: 'September', 10: 'Oktober', 11: 'November', 12: 'December'
+    }
+    year, month = map(int, month_str.split('-'))
+    return f"{months_da[month]} {year}"
+
+def load_transfer_data(employee_name, from_month):
+    """Indlæser overførselsdata fra en måned"""
+    try:
+        g = get_github_client()
+        if g:
+            repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
+            file_path = f"{SUBMISSIONS_DIR}/{from_month}/transfer_{employee_name}.json"
+            content = repo.get_contents(file_path)
+            import base64
+            return json.loads(base64.b64decode(content.content).decode('utf-8'))
+    except:
+        pass
+    return None
+
+def save_transfer_data(employee_name, from_month, to_month, data):
+    """Gemmer overførselsdata fra en måned til næste"""
+    try:
+        g = get_github_client()
+        if g:
+            repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
+            file_path = f"{SUBMISSIONS_DIR}/{from_month}/transfer_{employee_name}.json"
+            transfer_data = {
+                'from_month': from_month,
+                'to_month': to_month,
+                'employee': employee_name,
+                'timestamp': datetime.now().isoformat(),
+                'transferred_data': data
+            }
+            content = json.dumps(transfer_data, ensure_ascii=False, indent=2)
+            try:
+                file = repo.get_contents(file_path)
+                repo.update_file(file_path, f"Overførsel {from_month} -> {to_month}", content, file.sha)
+            except:
+                repo.create_file(file_path, f"Overførsel {from_month} -> {to_month}", content)
+            return True
+    except Exception as e:
+        st.error(f"Kunne ikke gemme overførselsdata: {str(e)}")
+    return False
+
 def employee_form():
     token = st.query_params.get("token", "")
     if not token:
@@ -486,63 +538,138 @@ def employee_form():
     
     emp = employee.iloc[0]
     
-    # Månedsvælger med dropdown
-    available_months = get_available_months()
+    # Indlæs config til datoer
+    config = load_config()
+    submission_deadline_day = config.get('submission_deadline_day', 20)
+    admin_notification_day = config.get('admin_notification_day', 25)
+    
+    # Konstruer måneds-liste: current + next
     current_month = get_month_name()
-    
-    # Tjek om der er en gemt måned i query params
-    selected_month = st.query_params.get("month", current_month)
-    if selected_month not in available_months:
-        selected_month = current_month
-    
-    selected_month = st.selectbox("Vælg måned", available_months, index=available_months.index(selected_month))
-    st.query_params["month"] = selected_month
+    next_month = get_next_month(current_month)
     
     st.title(f"Timeregnskab - {emp['Name']}")
-    st.write(f"Måned: {selected_month}")
     
-    existing = load_submission(emp['Name'], selected_month)
+    # Vis info om frister
+    st.info(f"📅 Frist for indberetning: Den {submission_deadline_day}. i måneden | Admin modtager data: Den {admin_notification_day}.")
     
-    data = {}
+    # Vis to måneder side om side
+    col1, col2 = st.columns(2)
     
-    if emp['Feriedage']:
-        data['feriedage'] = st.number_input("Feriedage", value=existing.get('feriedage', 0) if existing else 0, min_value=0)
-    if emp['Feriefridag']:
-        data['feriefridag'] = st.number_input("Feriefridage", value=existing.get('feriefridag', 0) if existing else 0, min_value=0)
-    if emp['Sygedage']:
-        data['sygedage'] = st.number_input("Sygedage", value=existing.get('sygedage', 0) if existing else 0, min_value=0)
-    if emp['Ekstra_Hverdag']:
-        data['ekstra_hverdag'] = st.number_input("Ekstra timer (Hverdag)", value=existing.get('ekstra_hverdag', 0) if existing else 0, min_value=0)
-    if emp['Ekstra_Lørdag']:
-        data['ekstra_lørdag'] = st.number_input("Ekstra timer (Lørdag)", value=existing.get('ekstra_lørdag', 0) if existing else 0, min_value=0)
-    if emp['Ekstra_Søndag']:
-        data['ekstra_søndag'] = st.number_input("Ekstra timer (Søndag)", value=existing.get('ekstra_søndag', 0) if existing else 0, min_value=0)
-    if emp['Ekstra_Andet']:
-        data['ekstra_andet'] = st.number_input("Ekstra timer (Andet)", value=existing.get('ekstra_andet', 0) if existing else 0, min_value=0)
-    if emp['Antal_timer']:
-        data['antal_timer'] = st.number_input("Antal timer i alt", value=existing.get('antal_timer', 0) if existing else 0, min_value=0)
-    
-    st.markdown("---")
-    
-    # Red text for indberet
-    st.error("**Indberet**")
-    
-    # Checkbox - simple, no popup
-    indberet = st.checkbox("Marker for at indberette", value=existing.get('udfyldt', False) if existing else False, key="indberet_cb")
-    
-    data['udfyldt'] = indberet
-    
-    if st.button("Gem"):
-        data['timestamp'] = datetime.now().isoformat()
-        data['employee'] = emp['Name']
-        data['month'] = selected_month
-        
-        if save_submission(emp['Name'], data, selected_month):
-            if data['udfyldt']:
-                st.success("✅ Indberettet!")
-                st.balloons()
+    for i, month in enumerate([current_month, next_month]):
+        with col1 if i == 0 else col2:
+            st.subheader(f"📆 {format_month_danish(month)}")
+            
+            # Indlæs eksisterende data
+            existing = load_submission(emp['Name'], month)
+            
+            # For næste måned: vis overført data fra denne måned
+            if month == next_month:
+                transfer = load_transfer_data(emp['Name'], current_month)
+                if transfer and 'transferred_data' in transfer:
+                    transferred = transfer['transferred_data']
+                    summary = transferred.get('summary', 'Ingen timer')
+                    st.success(f"🔄 Overført fra {current_month}: {summary}")
+            
+            data = {}
+            
+            # Vis felter
+            if emp['Feriedage']:
+                data['feriedage'] = st.number_input("Feriedage", value=existing.get('feriedage', 0) if existing else 0, min_value=0, key=f"feriedage_{month}")
+            if emp['Feriefridag']:
+                data['feriefridag'] = st.number_input("Feriefridage", value=existing.get('feriefridag', 0) if existing else 0, min_value=0, key=f"feriefridag_{month}")
+            if emp['Sygedage']:
+                data['sygedage'] = st.number_input("Sygedage", value=existing.get('sygedage', 0) if existing else 0, min_value=0, key=f"sygedage_{month}")
+            if emp['Ekstra_Hverdag']:
+                data['ekstra_hverdag'] = st.number_input("Ekstra timer (Hverdag)", value=existing.get('ekstra_hverdag', 0) if existing else 0, min_value=0, key=f"hverdag_{month}")
+            if emp['Ekstra_Lørdag']:
+                data['ekstra_lørdag'] = st.number_input("Ekstra timer (Lørdag)", value=existing.get('ekstra_lørdag', 0) if existing else 0, min_value=0, key=f"lørdag_{month}")
+            if emp['Ekstra_Søndag']:
+                data['ekstra_søndag'] = st.number_input("Ekstra timer (Søndag)", value=existing.get('ekstra_søndag', 0) if existing else 0, min_value=0, key=f"søndag_{month}")
+            if emp['Ekstra_Andet']:
+                data['ekstra_andet'] = st.number_input("Ekstra timer (Andet)", value=existing.get('ekstra_andet', 0) if existing else 0, min_value=0, key=f"andet_{month}")
+            if emp['Antal_timer']:
+                data['antal_timer'] = st.number_input("Antal timer i alt", value=existing.get('antal_timer', 0) if existing else 0, min_value=0, key=f"timer_{month}")
+            
+            st.markdown("---")
+            
+            # Indberet checkbox (kun for current_month)
+            if month == current_month:
+                st.error("**Indberet**")
+                # Vælg en tilfældig sjov afsender
+                import random
+                senders = [
+                    "til den store EDB-maskine",
+                    "fra din digitale påminder",
+                    "af the central scrutinizer",
+                    "fra den elektroniske brevdue",
+                    "af Robotten fra afdeling 7",
+                    "fra Den Digitale Timeregnskabs-Politi",
+                    "af System 32 (ja, det kører stadig)",
+                    "fra Den Autonome Påmindelses-Enhed",
+                    "af Overlord 3000 - Påmindelsesmodul",
+                    "fra Den mystiske mail-mand",
+                    "af Tidsmaskinen T-800",
+                    "fra Den travle administrative algoritme",
+                    "af Kvorums-gnomen",
+                    "fra Den digitale klipper",
+                    "af Pakke-Post-Peter",
+                    "fra Sir Sender af Camelot",
+                    "af Den flyvende hollandsk rapport",
+                    "fra Den uundgåelige notifikation",
+                    "af en ganske automatiseret udsendelsestjeneste",
+                    "fra bzzzcrrtping...",
+                    # 20 nye sjove afsendere
+                    "af Den digitale vandmand",
+                    "fra Systemfejl 404 - ikke fundet",
+                    "af Den elektroniske husassistent",
+                    "fra Kodelinje-Karl",
+                    "af Algoritme-Aage",
+                    "fra Den automatiske tidsoptæller",
+                    "af Cyber-Kaj",
+                    "fra Den logiske labyrint",
+                    "af Datamat-Dennis",
+                    "fra Den virtuelle vicevært",
+                    "af Terminal-Torben",
+                    "fra Den programmerbare påminder",
+                    "af Database-Bjarne",
+                    "fra Den digitale dueslag",
+                    "af Netværks-Niels",
+                    "fra Den elektroniske edb-rotte",
+                    "af Mega-Computeren 2.0",
+                    "fra Den automatiske arkiver",
+                    "af Server-Søren",
+                    "fra Den digitale driller"
+                ]
+                random_sender = random.choice(senders)
+                indberet = st.checkbox(f"Marker for at indberette {random_sender}", value=False, key=f"indberet_{month}")
+                data['udfyldt'] = indberet
             else:
-                st.success("Gemt!")
+                data['udfyldt'] = existing.get('udfyldt', False) if existing else False
+            
+            # Gem knap
+            if st.button("Gem", key=f"save_{month}"):
+                data['timestamp'] = datetime.now().isoformat()
+                data['employee'] = emp['Name']
+                data['month'] = month
+                
+                if save_submission(emp['Name'], data, month):
+                    # Hvis det er current_month og den er indberettet, gem overførselsdata
+                    if month == current_month and data.get('udfyldt'):
+                        # Lav en summary til overførsel
+                        summary_parts = []
+                        for key in ['feriedage', 'feriefridag', 'sygedage', 'ekstra_hverdag', 'ekstra_lørdag', 'ekstra_søndag', 'ekstra_andet', 'antal_timer']:
+                            if key in data and data[key] > 0:
+                                summary_parts.append(f"{key}: {data[key]}")
+                        data['summary'] = ', '.join(summary_parts) if summary_parts else 'Ingen timer'
+                        
+                        # Gem overførselsdata til næste måned
+                        save_transfer_data(emp['Name'], current_month, next_month, data)
+                    
+                    if data.get('udfyldt') and month == current_month:
+                        st.success("✅ Indberettet!")
+                        st.balloons()
+                    else:
+                        st.success("Gemt!")
 
 def main():
     if st.query_params.get("admin") == "true":
