@@ -117,3 +117,43 @@ Dato: 30. april 2026 (opdateret 1. maj 2026)
 - `scripts/aggregate_data.py` - Arkivering af submissions efter aggregation
 - `AGENTS.md` - Startup instruks til auto-læsning af log
 - `CONVERSATION_LOG.md` - Denne log
+
+## Session 4. maj 2026
+- Bruger rapporterede at påmindelser ikke blev sendt den 3. maj
+- **Fejl fundet**: `.github/workflows/reminders.yml` havde stadig cron sat til den 20. (`0 8 20 * *`)
+- **Fejl fundet**: `send_reminders.py` kræver `PyGithub`, men workflow installerede kun `pandas requests`
+- **Fejl fundet**: Både `send-reminders` og `aggregate-data` jobs var i samme workflow fil
+- **Løsning**: Rettet cron til `0 8 3 * *`, tilføjet `PyGithub` dependency, splittet workflows
+- Oprettet ny fil `.github/workflows/aggregate.yml` med cron `0 8 25 * *`
+- Push til GitHub: commit `Ret cron til den 3. i måneden + split workflows`
+- Backup taget før push
+
+### Ændrede filer
+- `.github/workflows/reminders.yml` - Cron rettet, PyGithub tilføjet, fjernet aggregate job
+- `.github/workflows/aggregate.yml` - Ny fil til dataopsamling den 25. i måneden
+
+## Session 4. maj 2026 (senere)
+- Bruger spurgte om cron er dynamisk (ændres fra interface)
+- **Ændring**: Workflows nu sat til at køre hver dag (`0 8 * * *`)
+- Scripts tjekker `submission_deadline_day` og `admin_notification_day` fra config.json
+- Når du ændrer dato i interfacet, virker det automatisk uden at ændre cron
+- Push: commit `Workflows kører dagligt - scripts tjekker dato fra config`
+
+### Ændrede filer
+- `.github/workflows/reminders.yml` - Cron ændret til dagligt
+- `.github/workflows/aggregate.yml` - Cron ændret til dagligt
+- `scripts/send_reminders.py` - Tjekker `submission_deadline_day` fra config
+- `scripts/aggregate_data.py` - Tjekker `admin_notification_day` fra config
+
+## Session 4. maj 2026 (Systeminfo)
+- Bruger ønskede et nyt faneblad "Systeminfo" med systemoplysninger
+- Tilføjet tab5 i admin interface med:
+  - Repository info (owner, repo, app URL)
+  - Indstillinger (indberetningsdag, notifikationsdag)
+  - SMTP info (server, port, brugernavn, password skjult, admin email)
+  - Medarbejdere med parametre de skal indsende
+  - GitHub Actions info (workflow filer, kørselsinfo)
+- Push til GitHub: commit `Tilføjet Systeminfo faneblad med systemoplysninger`
+
+### Ændrede filer
+- `app.py` - Tilføjet tab5 "Systeminfo" med relevante systemoplysninger
