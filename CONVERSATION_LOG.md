@@ -238,7 +238,23 @@ Hvis den nye implementering ikke virker, kan du rulle tilbage ved at kopiere fil
 - Tilføjet 20 nye sjove afsendere til "Marker for at indberette" checkboxen (nu 40 i alt)
 - Checkboxen viser nu en tilfældig afsender hver gang (f.eks. "Marker for at indberette til den store EDB-maskine")
 - Checkbox er nu `value=False` som default (ikke aktiv som standard)
+- Rettet alle afsendere til at bruge "til" i stedet for "fra/af"
 - **Ændrede filer**:
-  - `app.py` - Opdateret indberet checkbox med `random.choice()` og `value=False`
+  - `app.py` - Opdateret indberet checkbox med `random.choice()`, `value=False`, og "til" i alle afsendere
+  - `AGENTS.md` - Tilføjet shutdown instruks ved "farvel"
+- **Push til GitHub**: 
+  - Commit `850e804` - "Dansk månedsformat + sjove afsendere på indberet checkbox"
+  - Commit `0fe73ff` - "Ret afsendere til 'til' i stedet for 'fra/af'"
+
+## Session 4. maj 2026 (Rettelse: afsendere til 'til')
+- Rettet alle afsendere i indberet checkbox til at bruge "til" i stedet for "fra/af"
+- Eksempel: "Marker for at indberette til den store EDB-maskine"
+- **Ændrede filer**:
+  - `app.py` - 40 afsendere rettet til "til"
+  - `AGENTS.md` - Tilføjet shutdown instruks ved "farvel"
+- **Push til GitHub**: Commit `0fe73ff` - "Ret afsendere til 'til' i stedet for 'fra/af'"
 
 ## Session afsluttet 4. maj 2026 (seneste - fortsæt herfra næste gang)
+- Alle ændringer er pushet til GitHub
+- Logfilen (CONVERSATION_LOG.md) ligger lokalt i mappen
+- Shutdown instruks tilføjet AGENTS.md (gem log + push ved "farvel")

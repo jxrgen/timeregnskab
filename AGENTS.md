@@ -52,3 +52,9 @@ Streamlit Cloud app for automated time tracking with individual employee access 
 
 ## Startup instruction
 Always read `CONVERSATION_LOG.md` at the start of each session to understand recent work and continue from where we left off.
+
+## Shutdown instruction
+When user says "farvel" (goodbye), you MUST:
+1. Update `CONVERSATION_LOG.md` with the latest changes and push to GitHub
+2. Confirm that the log is saved locally in the folder
+3. Prepare to end the session
