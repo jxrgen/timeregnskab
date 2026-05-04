@@ -35,7 +35,7 @@ def main():
     # Config
     repo_owner = os.getenv("REPO_OWNER")
     repo_name = os.getenv("REPO_NAME")
-    app_url = os.getenv("APP_URL", "https://your-app.streamlit.app")
+    app_url = os.getenv("APP_URL", "https://your-app.streamlit.app").rstrip('/')
     
     # Load config from config.json
     g = Github(os.getenv("GITHUB_TOKEN"))
@@ -83,7 +83,34 @@ def main():
     df = pd.read_csv(StringIO(csv_content))
     
     now = datetime.now()
-    month_name = f"{now.year}-{now.month:02d}"
+    month_name = now.strftime("%B %Y")
+    deadline_day = config.get('submission_deadline_day', 3)
+    
+    # Funny sender names
+    senders = [
+        "din digitale påminder",
+        "the central scrutinizer",
+        "den store EDB-maskine der styrer alting",
+        "en ganske automatiseret udsendelsestjeneste",
+        "bzzzcrrtping...",
+        "den elektroniske brevdue",
+        "Robotten fra afdeling 7",
+        "Den Digitale Timeregnskabs-Politi",
+        "System 32 (ja, det kører stadig)",
+        "Den Autonome Påmindelses-Enhed",
+        "Overlord 3000 - Påmindelsesmodul",
+        "Den mystiske mail-mand",
+        "Tidsmaskinen T-800",
+        "Den travle administrative algoritme",
+        "Kvorums-gnomen",
+        "Den digitale klipper",
+        "Pakke-Post-Peter",
+        "Sir Sender af Camelot",
+        "Den flyvende hollandsk rapport",
+        "Den uundgåelige notifikation"
+    ]
+    import random
+    sender = random.choice(senders)
     
     # Check each employee
     for _, emp in df.iterrows():
@@ -96,7 +123,7 @@ def main():
         
         # Check if already submitted
         try:
-            submission_path = f"submissions/{month_name}/{employee_name}.json"
+            submission_path = f"submissions/{now.year}-{now.month:02d}/{employee_name}.json"
             repo.get_contents(submission_path)
             print(f"{employee_name}: Allerede indsendt")
             continue
@@ -108,13 +135,13 @@ def main():
         body = f"""Hej {employee_name},
 
 Du har endnu ikke udfyldt dit timeregnskab for {month_name}.
-Fristen er den 25. i måneden.
+Fristen er den {deadline_day}. i måneden.
 
 Du kan udfylde det her:
 {app_url}/?token={token}
 
-Venlig hilsen,
-Administrationen"""
+Mange hilsner,
+{sender}"""
         
         if send_email(email, subject, body, smtp_config):
             print(f"Påmindelse sendt til {employee_name}")
