@@ -41,22 +41,32 @@ def main():
     repo = g.get_user(repo_owner).get_repo(repo_name)
     
     # Load config from config.json
-    smtp_config = None
-    admin_email = None
+    config = {}
     try:
         content = repo.get_contents("config.json")
         import base64
         config = json.loads(base64.b64decode(content.content).decode('utf-8'))
-        if config.get('smtp_username') and config.get('smtp_password'):
-            smtp_config = {
-                'server': config.get('smtp_server', 'smtp.gmail.com'),
-                'port': config.get('smtp_port', 587),
-                'username': config.get('smtp_username', ''),
-                'password': config.get('smtp_password', '')
-            }
-        admin_email = config.get('admin_email', '')
     except Exception as e:
         print(f"Kunne ikke indlæse config.json: {e}")
+        return
+    
+    # Check if today is the admin notification day
+    now = datetime.now()
+    notification_day = config.get('admin_notification_day', 25)
+    if now.day != notification_day:
+        print(f"Ikke opsamlingsdag (i dag er den {now.day}, skal være den {notification_day})")
+        return
+    
+    smtp_config = None
+    admin_email = None
+    if config.get('smtp_username') and config.get('smtp_password'):
+        smtp_config = {
+            'server': config.get('smtp_server', 'smtp.gmail.com'),
+            'port': config.get('smtp_port', 587),
+            'username': config.get('smtp_username', ''),
+            'password': config.get('smtp_password', '')
+        }
+    admin_email = config.get('admin_email', '')
     
     # Load employees
     content = repo.get_contents("employees.csv")

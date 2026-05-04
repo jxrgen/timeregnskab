@@ -2,8 +2,8 @@ name: Send Reminders
 
 on:
   schedule:
-    # Runs at 8:00 AM on the 3rd of every month
-    - cron: '0 8 3 * *'
+    # Runs daily at 8:00 AM - script checks if today is the configured day
+    - cron: '0 8 * * *'
   workflow_dispatch:  # Allows manual trigger
 
 jobs:

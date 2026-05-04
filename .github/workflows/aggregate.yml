@@ -2,8 +2,8 @@ name: Aggregate Data
 
 on:
   schedule:
-    # Runs at 8:00 AM on the 25th of every month
-    - cron: '0 8 25 * *'
+    # Runs daily at 8:00 AM - script checks if today is the configured day
+    - cron: '0 8 * * *'
   workflow_dispatch:  # Allows manual trigger
 
 jobs:

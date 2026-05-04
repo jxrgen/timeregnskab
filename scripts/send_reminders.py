@@ -37,15 +37,28 @@ def main():
     repo_name = os.getenv("REPO_NAME")
     app_url = os.getenv("APP_URL", "https://your-app.streamlit.app")
     
-    # Load SMTP config from config.json
+    # Load config from config.json
     g = Github(os.getenv("GITHUB_TOKEN"))
     repo = g.get_user(repo_owner).get_repo(repo_name)
     
-    smtp_config = {}
+    config = {}
     try:
         content = repo.get_contents("config.json")
         import base64
         config = json.loads(base64.b64decode(content.content).decode('utf-8'))
+    except Exception as e:
+        print(f"Kunne ikke indlæse config.json: {e}")
+        return
+    
+    # Check if today is the submission deadline day
+    now = datetime.now()
+    deadline_day = config.get('submission_deadline_day', 3)
+    if now.day != deadline_day:
+        print(f"Ikke påmindelsesdag (i dag er den {now.day}, skal være den {deadline_day})")
+        return
+    
+    smtp_config = {}
+    if config.get('smtp_username') and config.get('smtp_password'):
         smtp_config = {
             'server': config.get('smtp_server', 'smtp.gmail.com'),
             'port': config.get('smtp_port', 587),
@@ -53,8 +66,6 @@ def main():
             'password': config.get('smtp_password', ''),
             'admin_email': config.get('admin_email', '')
         }
-    except Exception as e:
-        print(f"Kunne ikke indlæse config.json: {e}")
     
     if not all([smtp_config.get('username'), smtp_config.get('password')]):
         print("SMTP config mangler i config.json")
