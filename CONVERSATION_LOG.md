@@ -194,3 +194,8 @@ Dato: 30. april 2026 (opdateret 1. maj 2026)
 
 ### Ændrede filer
 - `scripts/send_reminders.py` - Rettet mail-formatering og tilføjet sjove afsendere
+
+## Næste gang
+- **Husk at fikse noget med de måneder, der skal registreres** (bruger vil uddybe næste session)
+
+## Session afsluttet 4. maj 2026
