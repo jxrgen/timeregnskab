@@ -1,13 +1,13 @@
-name: Send Reminders
+name: Aggregate Data
 
 on:
   schedule:
-    # Runs at 8:00 AM on the 3rd of every month
-    - cron: '0 8 3 * *'
+    # Runs at 8:00 AM on the 25th of every month
+    - cron: '0 8 25 * *'
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  send-reminders:
+  aggregate-data:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,10 +21,10 @@ jobs:
         run: |
           pip install pandas requests PyGithub
       
-      - name: Send reminders
+      - name: Aggregate data
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO_OWNER: ${{ github.repository_owner }}
           REPO_NAME: ${{ github.event.repository.name }}
           APP_URL: ${{ secrets.APP_URL }}
-        run: python scripts/send_reminders.py
+        run: python scripts/aggregate_data.py
