@@ -1,0 +1,16 @@
+{
+  "from_month": "2026-05",
+  "to_month": "2026-06",
+  "employee": "Jørgen Holm",
+  "timestamp": "2026-05-05T20:05:54.794854",
+  "transferred_data": {
+    "feriedage": 2,
+    "feriefridag": 1,
+    "sygedage": 2,
+    "udfyldt": true,
+    "timestamp": "2026-05-05T20:05:52.190315",
+    "employee": "Jørgen Holm",
+    "month": "2026-05",
+    "summary": "feriedage: 2, feriefridag: 1, sygedage: 2"
+  }
+}
