@@ -8,7 +8,6 @@ import secrets
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import random
 
 st.set_page_config(page_title="Timeregnskab", page_icon="📊", layout="wide")
 
@@ -27,48 +26,157 @@ MONTHS_DA = {
     9: 'September', 10: 'Oktober', 11: 'November', 12: 'December'
 }
 
-SENDERS = [
-    "til den store EDB-maskine",
-    "til din digitale påminder",
-    "til the central scrutinizer",
-    "til den elektroniske brevdue",
-    "til Robotten fra afdeling 7",
-    "til Den Digitale Timeregnskabs-Politi",
-    "til System 32 (ja, det kører stadig)",
-    "til Den Autonome Påmindelses-Enhed",
-    "til Overlord 3000 – Påmindelsesmodul",
-    "til Den mystiske mail-mand",
-    "til Tidsmaskinen T-800",
-    "til Den travle administrative algoritme",
-    "til Kvorums-gnomen",
-    "til Den digitale klipper",
-    "til Pakke-Post-Peter",
-    "til Sir Sender af Camelot",
-    "til Den flyvende hollandsk rapport",
-    "til Den uundgåelige notifikation",
-    "til en ganske automatiseret udsendelsestjeneste",
-    "til bzzzcrrtping...",
-    "til Den digitale vandmand",
-    "til Systemfejl 404 – ikke fundet",
-    "til Den elektroniske husassistent",
-    "til Kodelinje-Karl",
-    "til Algoritme-Aage",
-    "til Den automatiske tidsoptæller",
-    "til Cyber-Kaj",
-    "til Den logiske labyrint",
-    "til Datamat-Dennis",
-    "til Den virtuelle vicevært",
-    "til Terminal-Torben",
-    "til Den programmerbare påminder",
-    "til Database-Bjarne",
-    "til Den digitale dueslag",
-    "til Netværks-Niels",
-    "til Den elektroniske edb-rotte",
-    "til Mega-Computeren 2.0",
-    "til Den automatiske arkiver",
-    "til Server-Søren",
-    "til Den digitale driller",
-]
+
+def inject_css():
+    st.markdown("""
+    <style>
+    /* ── Base font ── */
+    html, body, [class*="css"] {
+        font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif !important;
+    }
+
+    /* ── Hide Streamlit chrome ── */
+    #MainMenu { visibility: hidden; }
+    footer    { visibility: hidden; }
+    header    { visibility: hidden; }
+
+    /* ── App background ── */
+    .stApp { background-color: #f5f5f7; }
+
+    /* ── Main container ── */
+    .main .block-container {
+        padding-top: 2.5rem;
+        padding-bottom: 3rem;
+        max-width: 880px;
+    }
+
+    /* ── Headings ── */
+    h1 { font-weight: 700; letter-spacing: -0.6px; color: #1d1d1f; font-size: 2rem; }
+    h2 { font-weight: 600; letter-spacing: -0.3px; color: #1d1d1f; }
+    h3 { font-weight: 600; letter-spacing: -0.2px; color: #1d1d1f; }
+
+    /* ── All buttons: Apple blue pill ── */
+    .stButton > button, .stFormSubmitButton > button {
+        background-color: #0071e3 !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 980px !important;
+        padding: 8px 22px !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        letter-spacing: -0.1px !important;
+        transition: background-color 0.15s ease !important;
+        box-shadow: none !important;
+    }
+    .stButton > button:hover, .stFormSubmitButton > button:hover {
+        background-color: #0077ed !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+    .stButton > button:active, .stFormSubmitButton > button:active {
+        background-color: #006bce !important;
+    }
+
+    /* ── Text inputs ── */
+    [data-testid="stTextInput"] input,
+    [data-testid="stNumberInputContainer"] input,
+    .stTextArea textarea,
+    input[type="password"] {
+        border-radius: 8px !important;
+        border: 1.5px solid #d2d2d7 !important;
+        background-color: #ffffff !important;
+        color: #1d1d1f !important;
+        font-size: 15px !important;
+        padding: 8px 12px !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    }
+    [data-testid="stTextInput"] input:focus,
+    [data-testid="stNumberInputContainer"] input:focus,
+    .stTextArea textarea:focus,
+    input[type="password"]:focus {
+        border-color: #0071e3 !important;
+        box-shadow: 0 0 0 3px rgba(0,113,227,0.12) !important;
+        outline: none !important;
+    }
+
+    /* ── Selectbox ── */
+    [data-baseweb="select"] > div {
+        border-radius: 8px !important;
+        border: 1.5px solid #d2d2d7 !important;
+        background-color: #ffffff !important;
+    }
+
+    /* ── Alert / info / warning boxes ── */
+    [data-testid="stAlert"] {
+        border-radius: 12px !important;
+        border: none !important;
+    }
+
+    /* ── Expanders ── */
+    [data-testid="stExpander"] {
+        background-color: #ffffff;
+        border: 1px solid #e8e8ed !important;
+        border-radius: 12px !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    /* ── Tabs ── */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: #e8e8ed;
+        border-radius: 10px;
+        padding: 3px;
+        gap: 2px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px !important;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: #6e6e73;
+        border: none !important;
+        padding: 6px 14px;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #ffffff !important;
+        color: #1d1d1f !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    /* ── Dataframe ── */
+    [data-testid="stDataFrame"] {
+        border-radius: 12px !important;
+        overflow: hidden;
+        border: 1px solid #e8e8ed !important;
+    }
+
+    /* ── Divider ── */
+    hr { border-color: #e8e8ed !important; margin: 2rem 0 !important; }
+
+    /* ── Checkbox label ── */
+    .stCheckbox label p {
+        font-size: 15px !important;
+        color: #1d1d1f !important;
+    }
+
+    /* ── Number input +/- buttons ── */
+    [data-testid="stNumberInputContainer"] button {
+        border-radius: 6px !important;
+        background-color: #e8e8ed !important;
+        color: #1d1d1f !important;
+        padding: 4px 10px !important;
+        font-size: 16px !important;
+        font-weight: 500 !important;
+        border: none !important;
+    }
+    [data-testid="stNumberInputContainer"] button:hover {
+        background-color: #d2d2d7 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+# ─────────────────────────────────────────────────────
+# GitHub helpers
+# ─────────────────────────────────────────────────────
 
 def get_github_client():
     token = None
@@ -80,6 +188,7 @@ def get_github_client():
         st.error("GitHub token ikke konfigureret")
         return None
     return Github(token)
+
 
 def load_employees():
     try:
@@ -99,6 +208,7 @@ def load_employees():
         st.error(f"Kunne ikke indlæse medarbejdere: {str(e)}")
         return pd.DataFrame()
 
+
 def save_employees(df):
     try:
         g = get_github_client()
@@ -116,6 +226,7 @@ def save_employees(df):
         st.error(f"Kunne ikke gemme medarbejdere: {str(e)}")
         return False
 
+
 def load_submission(employee_name, month):
     try:
         g = get_github_client()
@@ -128,6 +239,7 @@ def load_submission(employee_name, month):
     except:
         pass
     return None
+
 
 def save_submission(employee_name, data, month):
     try:
@@ -143,12 +255,14 @@ def save_submission(employee_name, data, month):
                 repo.create_file(file_path, f"Oprettet {month}/{employee_name}", content)
             return True
     except Exception as e:
-        st.error(f"Kunne ikke gemme submission: {str(e)}")
+        st.error(f"Kunne ikke gemme: {str(e)}")
         return False
     return False
 
+
 def generate_token():
     return secrets.token_urlsafe(16)
+
 
 def load_config():
     try:
@@ -161,6 +275,7 @@ def load_config():
     except:
         pass
     return {}
+
 
 def save_config(config):
     try:
@@ -178,11 +293,17 @@ def save_config(config):
         st.error(f"Kunne ikke gemme konfiguration: {str(e)}")
     return False
 
+
+# ─────────────────────────────────────────────────────
+# Date/period helpers
+# ─────────────────────────────────────────────────────
+
 def get_next_month(month_str):
     year, month = map(int, month_str.split('-'))
     if month == 12:
         return f"{year + 1}-01"
     return f"{year}-{month + 1:02d}"
+
 
 def get_previous_month(month_str):
     year, month = map(int, month_str.split('-'))
@@ -190,15 +311,17 @@ def get_previous_month(month_str):
         return f"{year - 1}-12"
     return f"{year}-{month - 1:02d}"
 
+
 def format_month_danish(month_str):
     year, month = map(int, month_str.split('-'))
     return f"{MONTHS_DA[month]} {year}"
 
+
 def get_current_period():
     """Returnerer (period_key, period_label).
     Perioden løber fra d. 21 i måned A til d. 20 i måned B.
-    Fra og med d. 21 gælder den nye periode (starter i denne måned, slutter næste måned).
-    Period_key er slutmåneden (B), brugt som mappenavn i submissions/.
+    Fra og med d. 21 gælder den nye periode.
+    Period_key er slutmåneden (B), brugt som mappenavn under submissions/.
     """
     today = datetime.now()
     current_month = f"{today.year}-{today.month:02d}"
@@ -210,6 +333,11 @@ def get_current_period():
         end_month = current_month
     label = f"21. {format_month_danish(start_month)} – 20. {format_month_danish(end_month)}"
     return end_month, label
+
+
+# ─────────────────────────────────────────────────────
+# Email helper
+# ─────────────────────────────────────────────────────
 
 def send_email_smtp(to_email, subject, body, config):
     smtp_server = config.get('smtp_server', '')
@@ -232,8 +360,8 @@ def send_email_smtp(to_email, subject, body, config):
     server.send_message(msg)
     server.quit()
 
+
 def collect_period_data(df, period_key):
-    """Samler alle aktive medarbejderes indberetninger for en periode."""
     rows = []
     for _, emp in df.iterrows():
         if not emp['Active']:
@@ -255,8 +383,14 @@ def collect_period_data(df, period_key):
         rows.append(row)
     return pd.DataFrame(rows)
 
+
+# ─────────────────────────────────────────────────────
+# Admin interface
+# ─────────────────────────────────────────────────────
+
 def admin_interface():
-    st.title("⚙️ Admin Interface")
+    st.title("Timeregnskab — Admin")
+
     admin_password = st.secrets.get("ADMIN_PASSWORD", "admin123")
     password = st.text_input("Adgangskode", type="password")
     if password != admin_password:
@@ -264,14 +398,26 @@ def admin_interface():
             st.error("Forkert adgangskode")
         return
 
-    st.success("Velkommen til admin interface")
+    st.success("Logget ind")
 
-    st.info(
-        f"**Registreringsperiode:** Fra d. 21 til d. 20 i den følgende måned.  \n"
-        f"**Påmindelser:** Sendes automatisk d. {REMINDER_DAY}. til alle aktive medarbejdere.  \n"
-        f"**Frist:** Medarbejdere skal indberette senest d. {DEADLINE_DAY}. — timer der ikke er indberettet inden fristen registreres ikke og medtages først i næste måneds opgørelse.  \n"
-        f"**Opsamling:** D. {AGGREGATE_DAY}. modtager du en samlet oversigt over alle medarbejderes indberetninger (indberettet og ikke indberettet)."
-    )
+    st.markdown(f"""
+    <div style="
+        background: #ffffff;
+        border: 1px solid #e8e8ed;
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin: 16px 0 24px 0;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+        font-size: 15px;
+        color: #1d1d1f;
+        line-height: 1.75;
+    ">
+        <strong>Registreringsperiode:</strong> Fra d. 21 til d. 20 i den følgende måned.<br>
+        <strong>Påmindelser:</strong> Sendes automatisk d. {REMINDER_DAY}. til alle aktive medarbejdere.<br>
+        <strong>Frist:</strong> Den {DEADLINE_DAY}. — timer der ikke er indberettet inden fristen medtages ikke og registreres først i næste måned.<br>
+        <strong>Opsamling:</strong> Den {AGGREGATE_DAY}. modtager du en samlet tabel med alle medarbejderes registreringer.
+    </div>
+    """, unsafe_allow_html=True)
 
     df = load_employees()
     if df.empty:
@@ -358,18 +504,11 @@ def admin_interface():
             submitted = st.form_submit_button("Tilføj medarbejder")
             if submitted and name and email:
                 new_row = pd.DataFrame([{
-                    'Name': name,
-                    'Email': email,
-                    'Active': True,
-                    'Feriedage': feriedage,
-                    'Feriefridag': feriefridag,
-                    'Sygedage': sygedage,
-                    'Ekstra_Hverdag': ekstra_hverdag,
-                    'Ekstra_Lørdag': ekstra_lørdag,
-                    'Ekstra_Søndag': ekstra_søndag,
-                    'Ekstra_Andet': ekstra_andet,
-                    'Antal_timer': antal_timer,
-                    'Token': generate_token()
+                    'Name': name, 'Email': email, 'Active': True,
+                    'Feriedage': feriedage, 'Feriefridag': feriefridag, 'Sygedage': sygedage,
+                    'Ekstra_Hverdag': ekstra_hverdag, 'Ekstra_Lørdag': ekstra_lørdag,
+                    'Ekstra_Søndag': ekstra_søndag, 'Ekstra_Andet': ekstra_andet,
+                    'Antal_timer': antal_timer, 'Token': generate_token()
                 }])
                 df = pd.concat([df, new_row], ignore_index=True)
                 if save_employees(df):
@@ -382,9 +521,7 @@ def admin_interface():
         prev_key = get_previous_month(period_key)
         prev_prev_key = get_previous_month(prev_key)
         months_options = [period_key, prev_key, prev_prev_key]
-        month_labels = [
-            f"{format_month_danish(m)} (periode slut)" for m in months_options
-        ]
+        month_labels = [f"{format_month_danish(m)} (periode slut)" for m in months_options]
         selected_idx = st.selectbox(
             "Vælg periode",
             range(len(month_labels)),
@@ -400,17 +537,14 @@ def admin_interface():
     with tab4:
         st.subheader("Fælles besked")
         st.write("Vælg medarbejdere og skriv en besked der skal sendes til dem alle.")
-
         st.write("**Vælg modtagere:**")
         selected = []
         for idx, row in df.iterrows():
             if row['Active']:
                 if st.checkbox(f"{row['Name']} ({row['Email']})", key=f"select_{idx}"):
                     selected.append(row)
-
         st.write("**Skriv besked:**")
         message = st.text_area("Besked", height=150, key="common_message")
-
         if st.button("Send fælles besked", key="send_common"):
             if not message:
                 st.error("Du skal skrive en besked!")
@@ -458,10 +592,7 @@ def admin_interface():
         st.write(f"**SMTP Port:** {config.get('smtp_port', 'Ikke sat')}")
         st.write(f"**SMTP Brugernavn:** {config.get('smtp_username', 'Ikke sat')}")
         password_val = config.get('smtp_password', '')
-        if password_val:
-            st.write(f"**SMTP Password:** {'*' * len(password_val)} (skjult)")
-        else:
-            st.write("**SMTP Password:** Ikke sat")
+        st.write(f"**SMTP Password:** {'*' * len(password_val) if password_val else 'Ikke sat'}")
         st.write(f"**Admin Email:** {config.get('admin_email', 'Ikke sat')}")
 
         st.markdown("### Medarbejdere")
@@ -469,15 +600,14 @@ def admin_interface():
             with st.expander(f"{row['Name']} ({'Aktiv' if row['Active'] else 'Inaktiv'})"):
                 st.write(f"**Email:** {row['Email']}")
                 st.write(f"**Token:** `{row['Token']}`")
-                params = []
-                if row['Feriedage']: params.append("Feriedage")
-                if row['Feriefridag']: params.append("Feriefridag")
-                if row['Sygedage']: params.append("Sygedage")
-                if row['Ekstra_Hverdag']: params.append("Ekstra Hverdag")
-                if row['Ekstra_Lørdag']: params.append("Ekstra Lørdag")
-                if row['Ekstra_Søndag']: params.append("Ekstra Søndag")
-                if row['Ekstra_Andet']: params.append("Ekstra Andet")
-                if row['Antal_timer']: params.append("Antal timer")
+                params = [
+                    label for col, label in [
+                        ('Feriedage', 'Feriedage'), ('Feriefridag', 'Feriefridag'),
+                        ('Sygedage', 'Sygedage'), ('Ekstra_Hverdag', 'Ekstra Hverdag'),
+                        ('Ekstra_Lørdag', 'Ekstra Lørdag'), ('Ekstra_Søndag', 'Ekstra Søndag'),
+                        ('Ekstra_Andet', 'Ekstra Andet'), ('Antal_timer', 'Antal timer'),
+                    ] if row[col]
+                ]
                 st.write(f"**Parametre:** {', '.join(params) if params else 'Ingen'}")
 
         st.markdown("### GitHub Actions")
@@ -491,14 +621,13 @@ def admin_interface():
         st.info(f"📅 Aktuel periode: **{period_label}**")
         st.write(
             "Klik for at sende en samlet opsummering af alle medarbejderes registreringer "
-            "til administratoren nu – uanset hvilken dato det er i dag."
+            "til administratoren nu — uanset hvilken dato det er i dag."
         )
-
         if st.button("Send opsummering til admin nu", type="primary", key="simulate_btn"):
             config = load_config()
             admin_email = config.get('admin_email', '')
             if not admin_email:
-                st.error("Admin email ikke konfigureret i SMTP-indstillingerne!")
+                st.error("Admin email ikke konfigureret!")
             elif not all([config.get('smtp_server'), config.get('smtp_username'), config.get('smtp_password')]):
                 st.error("SMTP-indstillinger mangler!")
             else:
@@ -506,10 +635,8 @@ def admin_interface():
                     summary_df = collect_period_data(df, period_key)
                     submitted_count = (summary_df['Indberettet'] == 'Ja').sum()
                     total_count = len(summary_df)
-
                     st.write("**Forhåndsvisning:**")
                     st.dataframe(summary_df)
-
                     subject = f"Timeregnskab – {period_label}"
                     body = (
                         f"Timeregnskab\n"
@@ -526,7 +653,6 @@ def admin_interface():
     st.divider()
 
     config = load_config()
-
     st.subheader("SMTP Email-indstillinger")
     st.info("Disse indstillinger bruges til at sende påmindelser og notifikationer.")
 
@@ -536,41 +662,59 @@ def admin_interface():
         smtp_port = st.number_input("SMTP Port", value=int(config.get('smtp_port', 587)), min_value=1, max_value=65535)
         smtp_username = st.text_input("SMTP Brugernavn (email)", value=config.get('smtp_username', ''))
     with col2:
-        smtp_password = st.text_input("SMTP Password (app password)", value=config.get('smtp_password', ''), type="password")
+        smtp_password = st.text_input("SMTP Password", value=config.get('smtp_password', ''), type="password")
         admin_email = st.text_input("Admin Email (modtager)", value=config.get('admin_email', ''))
 
-    if st.button("Gem SMTP-indstillinger"):
-        config['smtp_server'] = smtp_server
-        config['smtp_port'] = smtp_port
-        config['smtp_username'] = smtp_username
-        config['smtp_password'] = smtp_password
-        config['admin_email'] = admin_email
-        if save_config(config):
-            st.success("SMTP-indstillinger gemt!")
-            st.rerun()
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Gem SMTP-indstillinger"):
+            config['smtp_server'] = smtp_server
+            config['smtp_port'] = smtp_port
+            config['smtp_username'] = smtp_username
+            config['smtp_password'] = smtp_password
+            config['admin_email'] = admin_email
+            if save_config(config):
+                st.success("SMTP-indstillinger gemt!")
+                st.rerun()
+    with col2:
+        if st.button("Send test-email"):
+            try:
+                send_email_smtp(
+                    admin_email,
+                    "Test email fra Timeregnskab",
+                    "Dette er en test email for at verificere SMTP-indstillingerne.",
+                    {'smtp_server': smtp_server, 'smtp_port': smtp_port,
+                     'smtp_username': smtp_username, 'smtp_password': smtp_password}
+                )
+                st.success("✅ Test-email sendt!")
+            except Exception as e:
+                st.error(f"❌ Kunne ikke sende test-email: {str(e)}")
 
-    if st.button("Send test-email"):
-        try:
-            send_email_smtp(
-                admin_email,
-                "Test email fra Timeregnskab",
-                "Dette er en test email for at verificere SMTP-indstillingerne.",
-                {'smtp_server': smtp_server, 'smtp_port': smtp_port,
-                 'smtp_username': smtp_username, 'smtp_password': smtp_password}
-            )
-            st.success("✅ Test-email sendt! Tjek din indbakke.")
-        except Exception as e:
-            st.error(f"❌ Kunne ikke sende test-email: {str(e)}")
 
+# ─────────────────────────────────────────────────────
+# Employee form
+# ─────────────────────────────────────────────────────
 
 def employee_form():
     token = st.query_params.get("token", "")
     if not token:
-        st.title("⏰ Timeregnskab")
-        st.markdown("---")
-        st.info("**Medarbejdere:** Du skal bruge det personlige link du har modtaget")
-        st.info("**Admin:** Tilføj `?admin=true` til URL'en for at logge ind")
-        st.markdown("---")
+        st.title("Timeregnskab")
+        st.markdown("""
+        <div style="
+            background: #ffffff;
+            border: 1px solid #e8e8ed;
+            border-radius: 14px;
+            padding: 24px 28px;
+            margin: 20px 0;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+            font-size: 15px;
+            color: #1d1d1f;
+            line-height: 1.7;
+        ">
+            <strong>Medarbejdere:</strong> Du skal bruge dit personlige link for at tilgå formularen.<br>
+            <strong>Admin:</strong> Tilføj <code>?admin=true</code> til URL'en for at logge ind.
+        </div>
+        """, unsafe_allow_html=True)
         st.caption("Kontakt admin hvis du mangler dit link")
         return
 
@@ -580,7 +724,7 @@ def employee_form():
 
     employee = df[df['Token'] == token]
     if employee.empty:
-        st.error("Ugyldig token")
+        st.error("Ugyldigt link. Kontakt venligst din administrator.")
         return
 
     emp = employee.iloc[0]
@@ -588,15 +732,30 @@ def employee_form():
     existing = load_submission(emp['Name'], period_key)
     already_submitted = existing.get('udfyldt', False) if existing else False
 
-    st.title(f"Timeregnskab – {emp['Name']}")
-    st.info(f"📅 Periode: **{period_label}** | Frist: Den {DEADLINE_DAY}. i måneden")
-    st.warning(
-        f"Husk: Timer skal indberettes senest d. {DEADLINE_DAY}. i måneden. "
-        f"Indberetninger der mangler efter fristen registreres ikke og medtages først i næste måneds opgørelse."
-    )
+    st.title(f"Timeregnskab")
+    st.markdown(f"<h2 style='margin-top: -0.5rem; font-weight: 500; color: #6e6e73; font-size: 1.2rem;'>{emp['Name']}</h2>", unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style="
+        background: #ffffff;
+        border: 1px solid #e8e8ed;
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin: 16px 0 24px 0;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+        font-size: 15px;
+        color: #1d1d1f;
+        line-height: 1.8;
+    ">
+        <strong>Periode:</strong> {period_label}<br>
+        <strong>Frist:</strong> Den {DEADLINE_DAY}. i måneden kl. 23:59<br>
+        <strong>Påmindelse:</strong> Du modtager automatisk en påmindelsesmail d. {REMINDER_DAY}. — 2 dage før fristen<br>
+        <strong style="color: #c0392b;">Vigtigt:</strong> Timer der ikke er indberettet inden d. {DEADLINE_DAY}. registreres ikke og medtages først i næste måneds opgørelse.
+    </div>
+    """, unsafe_allow_html=True)
 
     if already_submitted:
-        st.success("✅ Du har allerede indberettet for denne periode.")
+        st.success("✅ Du har allerede indberettet for denne periode. Du kan stadig rette i tallene og indsende igen.")
 
     data = {}
 
@@ -649,17 +808,27 @@ def employee_form():
             min_value=0, key="timer"
         )
 
-    st.markdown("---")
-    st.error("**Indberet**")
-    random_sender = random.choice(SENDERS)
-    indberet = st.checkbox(
-        f"Marker for at indberette {random_sender}",
-        value=already_submitted,
-        key="indberet"
-    )
+    # ── Indberet section ──
+    st.markdown(f"""
+    <div style="
+        background: #f5f5f7;
+        border: 1.5px solid #d2d2d7;
+        border-radius: 14px;
+        padding: 20px 24px 12px 24px;
+        margin: 28px 0 12px 0;
+    ">
+        <div style="font-size: 18px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Indberet</div>
+        <div style="font-size: 14px; color: #6e6e73; line-height: 1.5;">
+            Marker afkrydsningsfeltet nedenfor og klik <strong>Indsend</strong> for at sende din
+            registrering for perioden <strong>{period_label}</strong>.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    indberet = st.checkbox("Marker her for at indberette", value=already_submitted, key="indberet")
     data['udfyldt'] = indberet
 
-    if st.button("Gem"):
+    if st.button("Indsend", type="primary"):
         data['timestamp'] = datetime.now().isoformat()
         data['employee'] = emp['Name']
         data['month'] = period_key
@@ -668,10 +837,15 @@ def employee_form():
                 st.success("✅ Indberettet!")
                 st.balloons()
             else:
-                st.success("Gemt!")
+                st.success("Gemt (ikke markeret som indberettet).")
 
+
+# ─────────────────────────────────────────────────────
+# Entry point
+# ─────────────────────────────────────────────────────
 
 def main():
+    inject_css()
     if st.query_params.get("admin") == "true":
         admin_interface()
     else:
