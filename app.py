@@ -27,35 +27,24 @@ MONTHS_DA = {
 }
 
 
+# ─────────────────────────────────────────────────────
+# CSS + HTML guides
+# ─────────────────────────────────────────────────────
+
 def inject_css():
     st.markdown("""
     <style>
-    /* ── Base font ── */
     html, body, [class*="css"] {
         font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif !important;
     }
-
-    /* ── Hide Streamlit chrome ── */
     #MainMenu { visibility: hidden; }
     footer    { visibility: hidden; }
     header    { visibility: hidden; }
-
-    /* ── App background ── */
     .stApp { background-color: #f5f5f7; }
-
-    /* ── Main container ── */
-    .main .block-container {
-        padding-top: 2.5rem;
-        padding-bottom: 3rem;
-        max-width: 880px;
-    }
-
-    /* ── Headings ── */
+    .main .block-container { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 880px; }
     h1 { font-weight: 700; letter-spacing: -0.6px; color: #1d1d1f; font-size: 2rem; }
     h2 { font-weight: 600; letter-spacing: -0.3px; color: #1d1d1f; }
     h3 { font-weight: 600; letter-spacing: -0.2px; color: #1d1d1f; }
-
-    /* ── All buttons: Apple blue pill ── */
     .stButton > button, .stFormSubmitButton > button {
         background-color: #0071e3 !important;
         color: #ffffff !important;
@@ -73,11 +62,6 @@ def inject_css():
         color: #ffffff !important;
         border: none !important;
     }
-    .stButton > button:active, .stFormSubmitButton > button:active {
-        background-color: #006bce !important;
-    }
-
-    /* ── Text inputs ── */
     [data-testid="stTextInput"] input,
     [data-testid="stNumberInputContainer"] input,
     .stTextArea textarea,
@@ -98,29 +82,18 @@ def inject_css():
         box-shadow: 0 0 0 3px rgba(0,113,227,0.12) !important;
         outline: none !important;
     }
-
-    /* ── Selectbox ── */
     [data-baseweb="select"] > div {
         border-radius: 8px !important;
         border: 1.5px solid #d2d2d7 !important;
         background-color: #ffffff !important;
     }
-
-    /* ── Alert / info / warning boxes ── */
-    [data-testid="stAlert"] {
-        border-radius: 12px !important;
-        border: none !important;
-    }
-
-    /* ── Expanders ── */
+    [data-testid="stAlert"] { border-radius: 12px !important; border: none !important; }
     [data-testid="stExpander"] {
         background-color: #ffffff;
         border: 1px solid #e8e8ed !important;
         border-radius: 12px !important;
         box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     }
-
-    /* ── Tabs ── */
     .stTabs [data-baseweb="tab-list"] {
         background-color: #e8e8ed;
         border-radius: 10px;
@@ -140,24 +113,13 @@ def inject_css():
         color: #1d1d1f !important;
         box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
-
-    /* ── Dataframe ── */
     [data-testid="stDataFrame"] {
         border-radius: 12px !important;
         overflow: hidden;
         border: 1px solid #e8e8ed !important;
     }
-
-    /* ── Divider ── */
     hr { border-color: #e8e8ed !important; margin: 2rem 0 !important; }
-
-    /* ── Checkbox label ── */
-    .stCheckbox label p {
-        font-size: 15px !important;
-        color: #1d1d1f !important;
-    }
-
-    /* ── Number input +/- buttons ── */
+    .stCheckbox label p { font-size: 15px !important; color: #1d1d1f !important; }
     [data-testid="stNumberInputContainer"] button {
         border-radius: 6px !important;
         background-color: #e8e8ed !important;
@@ -167,11 +129,543 @@ def inject_css():
         font-weight: 500 !important;
         border: none !important;
     }
-    [data-testid="stNumberInputContainer"] button:hover {
-        background-color: #d2d2d7 !important;
-    }
+    [data-testid="stNumberInputContainer"] button:hover { background-color: #d2d2d7 !important; }
     </style>
     """, unsafe_allow_html=True)
+
+
+def get_admin_guide_html():
+    return f"""
+<style>
+.ag {{
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    color: #1d1d1f;
+    line-height: 1.6;
+}}
+.ag-hero {{
+    background: linear-gradient(135deg, #0071e3 0%, #34aadc 100%);
+    color: white;
+    padding: 36px 32px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 30px rgba(0,113,227,0.28);
+}}
+.ag-hero h1 {{
+    margin: 0 0 8px 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: white;
+}}
+.ag-hero p {{
+    margin: 0;
+    font-size: 15px;
+    color: rgba(255,255,255,0.88);
+}}
+.ag-section {{
+    background: #ffffff;
+    border: 1px solid #e8e8ed;
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 18px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}}
+.ag-section h2 {{
+    margin: 0 0 14px 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1d1d1f;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f5;
+}}
+.ag-section h3 {{
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin: 18px 0 8px 0;
+}}
+.ag-section p, .ag-section li {{
+    color: #3a3a3c;
+    font-size: 14.5px;
+    line-height: 1.65;
+    margin: 0 0 6px 0;
+}}
+.ag-section ul {{ padding-left: 20px; margin: 8px 0; }}
+.ag-section li {{ margin-bottom: 6px; }}
+.ag-timeline {{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 4px 0 16px 0;
+}}
+.ag-titem {{
+    flex: 1;
+    min-width: 150px;
+    border-radius: 12px;
+    padding: 14px 16px;
+    border-left: 4px solid #d2d2d7;
+    background: #f5f5f7;
+}}
+.ag-titem.reminder {{ border-left-color: #ff9500; background: #fff8f0; }}
+.ag-titem.deadline {{ border-left-color: #ff3b30; background: #fff2f2; }}
+.ag-titem.collect  {{ border-left-color: #34c759; background: #f0faf4; }}
+.ag-tdate {{ font-size: 19px; font-weight: 700; color: #1d1d1f; margin-bottom: 3px; }}
+.ag-ttitle {{ font-size: 13px; font-weight: 600; color: #1d1d1f; margin-bottom: 4px; }}
+.ag-tdesc {{ font-size: 12.5px; color: #6e6e73; line-height: 1.5; }}
+.ag-steps {{ display: flex; flex-direction: column; gap: 8px; margin: 10px 0 0 0; }}
+.ag-step {{
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 16px;
+    background: #f5f5f7;
+    border-radius: 10px;
+}}
+.ag-step-num {{
+    width: 26px; height: 26px; min-width: 26px;
+    background: #0071e3; color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+}}
+.ag-step-title {{ font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 3px; }}
+.ag-step-desc {{ font-size: 13px; color: #6e6e73; line-height: 1.5; margin: 0; }}
+.ag-callout {{
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 12px 0 4px 0;
+    font-size: 14px;
+    line-height: 1.55;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}}
+.ag-callout.info    {{ background: #e8f4ff; border-left: 3px solid #0071e3; color: #0044a3; }}
+.ag-callout.warning {{ background: #fff8e6; border-left: 3px solid #ff9500; color: #7a4500; }}
+.ag-callout.danger  {{ background: #fff2f2; border-left: 3px solid #ff3b30; color: #8b0000; }}
+.ag-callout.success {{ background: #f0faf4; border-left: 3px solid #34c759; color: #1a6b34; }}
+.ag-table {{ width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 10px 0; }}
+.ag-table th {{
+    background: #f5f5f7;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: #1d1d1f;
+    border-bottom: 1px solid #e8e8ed;
+}}
+.ag-table td {{
+    padding: 10px 14px;
+    color: #3a3a3c;
+    border-bottom: 1px solid #f0f0f5;
+    vertical-align: top;
+}}
+.ag-table tr:last-child td {{ border-bottom: none; }}
+.ag-grid {{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 10px 0;
+}}
+.ag-card {{
+    background: #f5f5f7;
+    border-radius: 10px;
+    padding: 14px 16px;
+}}
+.ag-card-title {{ font-size: 13.5px; font-weight: 600; color: #1d1d1f; margin-bottom: 5px; }}
+.ag-card-desc {{ font-size: 13px; color: #6e6e73; line-height: 1.5; margin: 0; }}
+code {{
+    background: #f5f5f7;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 12.5px;
+    color: #1d1d1f;
+    font-family: "SF Mono", "Fira Code", monospace;
+}}
+</style>
+
+<div class="ag">
+
+<div class="ag-hero">
+  <h1>📋 Vejledning til administratorer</h1>
+  <p>Alt du behøver at vide om at administrere Timeregnskab-systemet</p>
+</div>
+
+<!-- OVERBLIK -->
+<div class="ag-section">
+  <h2>🏠 Hvad er Timeregnskab?</h2>
+  <p>Timeregnskab er et system til månedlig indsamling af tidsregistreringer fra medarbejdere. Hver medarbejder har et personligt, unikt link — der kræves ingen kode eller login. Du som admin styrer hvem der er i systemet, hvilke felter de skal udfylde, og modtager automatisk en samlet oversigt hver måned.</p>
+  <div class="ag-grid">
+    <div class="ag-card">
+      <div class="ag-card-title">👤 Medarbejdere</div>
+      <p class="ag-card-desc">Tilgår systemet via et personligt link med et unikt token. Ingen kode, ingen login — bare linket.</p>
+    </div>
+    <div class="ag-card">
+      <div class="ag-card-title">🔐 Admin</div>
+      <p class="ag-card-desc">Tilgår admin-interfacet via <code>?admin=true</code> i URL'en + adgangskode.</p>
+    </div>
+    <div class="ag-card">
+      <div class="ag-card-title">📁 Data</div>
+      <p class="ag-card-desc">Alle indberetninger gemmes som JSON-filer i GitHub-repoet med fuld versionshistorik.</p>
+    </div>
+    <div class="ag-card">
+      <div class="ag-card-title">📧 Automatisk email</div>
+      <p class="ag-card-desc">Påmindelser d. {REMINDER_DAY}. og månedlig oversigt d. {AGGREGATE_DAY}. sendes automatisk via din SMTP-server.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MÅNEDLIG CYKLUS -->
+<div class="ag-section">
+  <h2>📅 Månedlig cyklus</h2>
+  <p>Registreringsperioden løber altid fra <strong>d. 21 i én måned til d. 20 i den næste</strong>. Herunder ses hvad der sker automatisk:</p>
+  <div class="ag-timeline">
+    <div class="ag-titem">
+      <div class="ag-tdate">D. 1–17</div>
+      <div class="ag-ttitle">Løbende registrering</div>
+      <div class="ag-tdesc">Medarbejdere udfylder og gemmer deres registrering via deres personlige link. De kan rette og gemme igen til enhver tid inden fristen.</div>
+    </div>
+    <div class="ag-titem reminder">
+      <div class="ag-tdate">D. {REMINDER_DAY}.</div>
+      <div class="ag-ttitle">🔔 Påmindelsesmail</div>
+      <div class="ag-tdesc">Systemet sender automatisk en påmindelsesmail til <em>alle</em> aktive medarbejdere — uanset om de allerede har indberettet.</div>
+    </div>
+    <div class="ag-titem deadline">
+      <div class="ag-tdate">D. {DEADLINE_DAY}.</div>
+      <div class="ag-ttitle">⏰ Frist</div>
+      <div class="ag-tdesc">Seneste indberetningsdato. Timer der ikke er indberettet inden midnat registreres ikke og medtages <strong>ikke</strong> i denne måneds opgørelse.</div>
+    </div>
+    <div class="ag-titem collect">
+      <div class="ag-tdate">D. {AGGREGATE_DAY}.</div>
+      <div class="ag-ttitle">📊 Opsamling</div>
+      <div class="ag-tdesc">Du modtager automatisk en samlet tabel over alle medarbejderes registreringer. Ny registreringsperiode starter samme dag.</div>
+    </div>
+  </div>
+  <div class="ag-callout info">
+    <span>ℹ️</span>
+    <div>Datoerne {REMINDER_DAY}, {DEADLINE_DAY} og {AGGREGATE_DAY} er faste og ændres ikke via interfacet — de er kodet direkte i systemet.</div>
+  </div>
+</div>
+
+<!-- MEDARBEJDERE -->
+<div class="ag-section">
+  <h2>👥 Administrér medarbejdere</h2>
+
+  <h3>Tilføj en ny medarbejder</h3>
+  <div class="ag-steps">
+    <div class="ag-step">
+      <div class="ag-step-num">1</div>
+      <div>
+        <div class="ag-step-title">Gå til fanen "Tilføj ny"</div>
+        <p class="ag-step-desc">Find den i toppen af admin-interfacet.</p>
+      </div>
+    </div>
+    <div class="ag-step">
+      <div class="ag-step-num">2</div>
+      <div>
+        <div class="ag-step-title">Udfyld navn og email</div>
+        <p class="ag-step-desc">Brug medarbejderens fulde navn — det bruges som filnavn i systemet og må ikke ændres bagefter (medmindre du accepterer at historik knyttes til det gamle navn). Emailen bruges til påmindelser.</p>
+      </div>
+    </div>
+    <div class="ag-step">
+      <div class="ag-step-num">3</div>
+      <div>
+        <div class="ag-step-title">Vælg skemafelter</div>
+        <p class="ag-step-desc">Marker kun de felter der er relevante for medarbejderen. Umarkerede felter vises slet ikke i medarbejderens formular.</p>
+      </div>
+    </div>
+    <div class="ag-step">
+      <div class="ag-step-num">4</div>
+      <div>
+        <div class="ag-step-title">Klik "Tilføj medarbejder"</div>
+        <p class="ag-step-desc">Et unikt personligt link genereres automatisk og vises under fanen "Medarbejdere".</p>
+      </div>
+    </div>
+    <div class="ag-step">
+      <div class="ag-step-num">5</div>
+      <div>
+        <div class="ag-step-title">Send linket til medarbejderen</div>
+        <p class="ag-step-desc">Kopiér linket og send det per email eller anden besked. Linket er permanent — medarbejderen kan bogmærke det og bruge det hver måned uden at logge ind.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Skemafelter — hvad betyder de?</h3>
+  <table class="ag-table">
+    <tr><th>Felt</th><th>Hvad registreres</th><th>Typisk for</th></tr>
+    <tr><td><strong>Feriedage</strong></td><td>Antal afholdte feriedage i perioden</td><td>Fastansatte</td></tr>
+    <tr><td><strong>Feriefridag</strong></td><td>Særlige feriefridage (f.eks. 6. ferieuge)</td><td>Fastansatte</td></tr>
+    <tr><td><strong>Sygedage</strong></td><td>Antal sygedage i perioden</td><td>Fastansatte</td></tr>
+    <tr><td><strong>Ekstra Hverdag</strong></td><td>Ekstra timer arbejdet på hverdage</td><td>Timelønnet / overarbejde</td></tr>
+    <tr><td><strong>Ekstra Lørdag</strong></td><td>Ekstra timer arbejdet på lørdage</td><td>Timelønnet / overarbejde</td></tr>
+    <tr><td><strong>Ekstra Søndag</strong></td><td>Ekstra timer arbejdet på søndage</td><td>Timelønnet / overarbejde</td></tr>
+    <tr><td><strong>Ekstra Andet</strong></td><td>Andre ekstra timer (helligdage mm.)</td><td>Timelønnet / overarbejde</td></tr>
+    <tr><td><strong>Antal timer</strong></td><td>Samlet antal arbejdstimer i perioden</td><td>Timebaseret løn</td></tr>
+  </table>
+
+  <h3>Redigér en medarbejder</h3>
+  <p>Under fanen <strong>"Medarbejdere"</strong> kan du klikke på en medarbejders ekspander og:</p>
+  <ul>
+    <li><strong>Gem ændringer</strong> — ret navn, email, aktiv-status eller hvilke felter de ser</li>
+    <li><strong>Ny token</strong> — genererer et nyt unikt link. Det gamle link virker ikke længere. Brug dette hvis medarbejderen har mistet sit link eller af sikkerhedshensyn</li>
+    <li><strong>Slet</strong> — fjerner medarbejderen fra systemet permanent. Tidligere indberetninger slettes ikke, men de modtager ikke fremtidige påmindelser og vises ikke i oversigter</li>
+    <li><strong>Inaktiv</strong> — en mere skånsom løsning end sletning: medarbejderen ses i systemet men modtager ingen påmindelser og tæller ikke med i opsamlingen</li>
+  </ul>
+  <div class="ag-callout warning">
+    <span>⚠️</span>
+    <div><strong>"Ny token"</strong> ugyldiggør øjeblikkeligt det gamle link. Send altid det nye link til medarbejderen bagefter — ellers kan de ikke tilgå systemet.</div>
+  </div>
+</div>
+
+<!-- INDSENDELSER -->
+<div class="ag-section">
+  <h2>📋 Se indsendelser</h2>
+  <p>Under fanen <strong>"Indsendelser"</strong> kan du tjekke hvem der har indberettet for en given periode.</p>
+  <ul>
+    <li>Vælg perioden (de 3 seneste vises) i dropdownmenuen øverst</li>
+    <li><strong style="color: #2e7d32;">✅ Udfyldt</strong> — medarbejderen har sat hak i "Marker her for at indberette" og klikket Indsend</li>
+    <li><strong style="color: #c62828;">❌ Mangler</strong> — ingen indberetning er modtaget, eller medarbejderen har gemt tal men ikke afkrydset og indsendt</li>
+  </ul>
+  <div class="ag-callout info">
+    <span>ℹ️</span>
+    <div>En medarbejder der har <em>gemt</em> tal men ikke afkrydset "Marker her for at indberette" og trykket <em>Indsend</em> tæller som <strong>Mangler</strong>. Data er gemt men ikke bekræftet.</div>
+  </div>
+</div>
+
+<!-- FÆLLES BESKED -->
+<div class="ag-section">
+  <h2>✉️ Send en fælles besked</h2>
+  <p>Fanen <strong>"Fælles besked"</strong> giver dig mulighed for at sende en ad hoc-email til udvalgte medarbejdere — f.eks. en ekstra påminding, en rettelse eller en vigtig meddelelse.</p>
+  <div class="ag-steps">
+    <div class="ag-step">
+      <div class="ag-step-num">1</div>
+      <div>
+        <div class="ag-step-title">Vælg modtagere</div>
+        <p class="ag-step-desc">Sæt hak ud for de medarbejdere du vil skrive til. Kun aktive medarbejdere vises.</p>
+      </div>
+    </div>
+    <div class="ag-step">
+      <div class="ag-step-num">2</div>
+      <div>
+        <div class="ag-step-title">Skriv din besked</div>
+        <p class="ag-step-desc">Beskeden indsættes i en email med medarbejderens fornavn i hilsenen. Hold beskeden kort og konkret.</p>
+      </div>
+    </div>
+    <div class="ag-step">
+      <div class="ag-step-num">3</div>
+      <div>
+        <div class="ag-step-title">Klik "Send fælles besked"</div>
+        <p class="ag-step-desc">Systemet sender en individuel email til hver valgt medarbejder med det samme.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIMULER -->
+<div class="ag-section">
+  <h2>🧪 Simuler indsendelse</h2>
+  <p>Fanen <strong>"Simuler"</strong> lader dig manuelt sende den månedlige opsamlingsemail til admin-emailen — uanset hvilken dato det er i dag.</p>
+  <p>Brug det til at:</p>
+  <ul>
+    <li>Teste at SMTP-opsætningen virker korrekt</li>
+    <li>Hente et øjebliksbillede midt i måneden (hvem har indberettet så langt?)</li>
+    <li>Manuelt indhente data uden at vente på d. {AGGREGATE_DAY}.</li>
+  </ul>
+  <p>Du kan se en forhåndsvisning af tabellen direkte i interfacet, inden emailen sendes.</p>
+  <div class="ag-callout success">
+    <span>✅</span>
+    <div>Simulering arkiverer <em>ikke</em> data og sletter <em>ikke</em> indberetninger — det er udelukkende en email til dig.</div>
+  </div>
+</div>
+
+<!-- SMTP -->
+<div class="ag-section">
+  <h2>⚙️ SMTP-indstillinger</h2>
+  <p>For at systemet kan sende emails, kræves en SMTP-mailserver. Indstillingerne gemmes i systemet og bruges af både det automatiske flow og admin-interfacet.</p>
+  <table class="ag-table">
+    <tr><th>Felt</th><th>Beskrivelse</th><th>Eksempel (one.com)</th></tr>
+    <tr><td><strong>SMTP Server</strong></td><td>Mailserverens adresse</td><td><code>send.one.com</code></td></tr>
+    <tr><td><strong>SMTP Port</strong></td><td>587 = STARTTLS &nbsp;|&nbsp; 465 = SSL/TLS</td><td><code>465</code></td></tr>
+    <tr><td><strong>SMTP Brugernavn</strong></td><td>Din fulde email-adresse</td><td><code>timereg@firma.dk</code></td></tr>
+    <tr><td><strong>SMTP Password</strong></td><td>Adgangskoden til emailkontoen</td><td>—</td></tr>
+    <tr><td><strong>Admin Email</strong></td><td>Hvem der modtager den månedlige oversigt</td><td><code>admin@firma.dk</code></td></tr>
+  </table>
+  <div class="ag-steps">
+    <div class="ag-step">
+      <div class="ag-step-num">1</div>
+      <div>
+        <div class="ag-step-title">Udfyld alle felter og klik "Gem SMTP-indstillinger"</div>
+        <p class="ag-step-desc">Indstillingerne gemmes i systemets konfigurationsfil på GitHub.</p>
+      </div>
+    </div>
+    <div class="ag-step">
+      <div class="ag-step-num">2</div>
+      <div>
+        <div class="ag-step-title">Klik "Send test-email" og bekræft</div>
+        <p class="ag-step-desc">En test-email sendes til admin-emailen. Tjek din indbakke og eventuelt spam-mappen.</p>
+      </div>
+    </div>
+  </div>
+  <div class="ag-callout warning">
+    <span>⚠️</span>
+    <div>Gem altid SMTP-indstillingerne <em>før</em> du sender en test-email, da test-emailen bruger de aktuelle formularværdier — ikke de gemte.</div>
+  </div>
+</div>
+
+<!-- HVAD MODTAGER ADMIN -->
+<div class="ag-section">
+  <h2>📬 Den månedlige opsamlingsemail</h2>
+  <p>Den {AGGREGATE_DAY}. i måneden modtager du automatisk en email med en samlet tabel over alle aktive medarbejderes registreringer for den netop afsluttede periode. Tabellen indeholder:</p>
+  <ul>
+    <li>Medarbejderens navn</li>
+    <li>Om de har indberettet (<strong>Ja</strong> = afkrydset og indsendt / <strong>Nej</strong> = ingen bekræftet indberetning)</li>
+    <li>Alle registrerede værdier: feriedage, sygedage, ekstra timer osv.</li>
+    <li>Medarbejdere der ikke har indberettet vises med <strong>Nej</strong> og tomme felter</li>
+  </ul>
+  <div class="ag-callout danger">
+    <span>🚨</span>
+    <div>Data fra medarbejdere der <em>ikke</em> har indberettet inden d. {DEADLINE_DAY}. medtages <strong>ikke</strong> i opgørelsen og <strong>overføres ikke</strong> automatisk til næste periode.</div>
+  </div>
+  <p style="margin-top: 12px;">En kopi af oversigten gemmes også som CSV-fil i GitHub-repoet under <code>summary/YYYY-MM.csv</code>.</p>
+</div>
+
+<!-- TIPS -->
+<div class="ag-section">
+  <h2>💡 Praktiske tips</h2>
+  <div class="ag-grid">
+    <div class="ag-card">
+      <div class="ag-card-title">🔗 Links er permanente</div>
+      <p class="ag-card-desc">Medarbejdernes links ændrer sig kun hvis du klikker "Ny token". De kan bogmærke linket og bruge det månedligt.</p>
+    </div>
+    <div class="ag-card">
+      <div class="ag-card-title">🔄 Kan genindsendes</div>
+      <p class="ag-card-desc">Medarbejdere kan rette og genindsende inden d. {DEADLINE_DAY}. Det seneste Indsend overskriver det forrige.</p>
+    </div>
+    <div class="ag-card">
+      <div class="ag-card-title">📱 Mobilvenligt</div>
+      <p class="ag-card-desc">Medarbejderformularen virker på alle enheder — telefon, tablet og computer.</p>
+    </div>
+    <div class="ag-card">
+      <div class="ag-card-title">📦 Automatisk arkiv</div>
+      <p class="ag-card-desc">Når data opsamles d. {AGGREGATE_DAY}. flyttes indberetningerne automatisk til <code>archive/</code> i GitHub. Historik bevares.</p>
+    </div>
+    <div class="ag-card">
+      <div class="ag-card-title">👁️ Inaktive medarbejdere</div>
+      <p class="ag-card-desc">Sæt en medarbejder til "Inaktiv" frem for at slette — de modtager ingen påmindelser, men data og link bevares.</p>
+    </div>
+    <div class="ag-card">
+      <div class="ag-card-title">🧪 Test månedligt flow</div>
+      <p class="ag-card-desc">Brug "Simuler"-fanen til at teste hele emailflowet og se hvem der pt. har indberettet.</p>
+    </div>
+  </div>
+</div>
+
+</div>
+"""
+
+
+def get_employee_guide_html(period_label, reminder_day, deadline_day):
+    return f"""
+<style>
+.eg {{
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    color: #1d1d1f;
+    line-height: 1.6;
+}}
+.eg-section {{
+    margin-bottom: 14px;
+}}
+.eg-section h3 {{
+    font-size: 15px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin: 0 0 6px 0;
+}}
+.eg-section p, .eg-section li {{
+    font-size: 14px;
+    color: #3a3a3c;
+    line-height: 1.65;
+    margin: 0 0 4px 0;
+}}
+.eg-section ul {{ padding-left: 18px; margin: 6px 0; }}
+.eg-section li {{ margin-bottom: 5px; }}
+.eg-dates {{
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}}
+.eg-date {{
+    flex: 1;
+    min-width: 120px;
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: center;
+}}
+.eg-date.reminder {{ background: #fff8f0; border: 1.5px solid #ff9500; }}
+.eg-date.deadline {{ background: #fff2f2; border: 1.5px solid #ff3b30; }}
+.eg-date.collect  {{ background: #f0faf4; border: 1.5px solid #34c759; }}
+.eg-date-num {{ font-size: 22px; font-weight: 700; color: #1d1d1f; }}
+.eg-date-label {{ font-size: 12px; color: #6e6e73; margin-top: 2px; }}
+.eg-callout {{
+    border-radius: 9px;
+    padding: 10px 14px;
+    margin: 10px 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    border-left: 3px solid;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}}
+.eg-callout.info    {{ background: #e8f4ff; border-color: #0071e3; color: #0044a3; }}
+.eg-callout.danger  {{ background: #fff2f2; border-color: #ff3b30; color: #8b0000; }}
+</style>
+<div class="eg">
+
+  <div class="eg-section">
+    <h3>Hvad skal jeg gøre?</h3>
+    <ul>
+      <li>Udfyld felterne med dine registreringer for den aktuelle periode: <strong>{period_label}</strong></li>
+      <li>Sæt hak i "Marker her for at indberette" i bunden af siden</li>
+      <li>Klik <strong>Indsend</strong> for at sende din registrering</li>
+    </ul>
+    <div class="eg-callout info">
+      <span>💾</span>
+      <div>Du kan klikke <strong>Indsend</strong> flere gange — f.eks. hvis du vil rette et tal. Det seneste indsend erstatter det forrige.</div>
+    </div>
+  </div>
+
+  <div class="eg-section">
+    <h3>Vigtige datoer hver måned</h3>
+    <div class="eg-dates">
+      <div class="eg-date reminder">
+        <div class="eg-date-num">D. {reminder_day}.</div>
+        <div class="eg-date-label">Du modtager en påmindelsesmail</div>
+      </div>
+      <div class="eg-date deadline">
+        <div class="eg-date-num">D. {deadline_day}.</div>
+        <div class="eg-date-label">Seneste frist for indberetning</div>
+      </div>
+    </div>
+    <div class="eg-callout danger">
+      <span>⚠️</span>
+      <div><strong>Mangler du at indsende inden d. {deadline_day}.?</strong> Dine timer registreres ikke og medtages <strong>ikke</strong> i denne måneds opgørelse. Kontakt din administrator.</div>
+    </div>
+  </div>
+
+  <div class="eg-section">
+    <h3>Hvad betyder felterne?</h3>
+    <ul>
+      <li><strong>Feriedage / Feriefridage</strong> — dage du har holdt fri med ferie</li>
+      <li><strong>Sygedage</strong> — dage du var sygemeldt</li>
+      <li><strong>Ekstra timer</strong> — timer du har arbejdet ud over din normale arbejdstid</li>
+      <li><strong>Antal timer</strong> — det samlede antal timer du har arbejdet i perioden</li>
+    </ul>
+    <p>Du ser kun de felter der er relevante for dig — andre felter vises ikke.</p>
+  </div>
+
+</div>
+"""
 
 
 # ─────────────────────────────────────────────────────
@@ -295,7 +789,7 @@ def save_config(config):
 
 
 # ─────────────────────────────────────────────────────
-# Date/period helpers
+# Date / period helpers
 # ─────────────────────────────────────────────────────
 
 def get_next_month(month_str):
@@ -320,7 +814,6 @@ def format_month_danish(month_str):
 def get_current_period():
     """Returnerer (period_key, period_label).
     Perioden løber fra d. 21 i måned A til d. 20 i måned B.
-    Fra og med d. 21 gælder den nye periode.
     Period_key er slutmåneden (B), brugt som mappenavn under submissions/.
     """
     today = datetime.now()
@@ -344,13 +837,11 @@ def send_email_smtp(to_email, subject, body, config):
     smtp_port = int(config.get('smtp_port', 587))
     smtp_username = config.get('smtp_username', '')
     smtp_password = config.get('smtp_password', '')
-
     msg = MIMEMultipart()
     msg['From'] = smtp_username
     msg['To'] = to_email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
-
     if smtp_port == 465:
         server = smtplib.SMTP_SSL(smtp_server, smtp_port)
     else:
@@ -402,15 +893,10 @@ def admin_interface():
 
     st.markdown(f"""
     <div style="
-        background: #ffffff;
-        border: 1px solid #e8e8ed;
-        border-radius: 14px;
-        padding: 20px 24px;
-        margin: 16px 0 24px 0;
-        box-shadow: 0 1px 6px rgba(0,0,0,0.05);
-        font-size: 15px;
-        color: #1d1d1f;
-        line-height: 1.75;
+        background:#ffffff;border:1px solid #e8e8ed;border-radius:14px;
+        padding:20px 24px;margin:16px 0 24px 0;
+        box-shadow:0 1px 6px rgba(0,0,0,0.05);
+        font-size:15px;color:#1d1d1f;line-height:1.75;
     ">
         <strong>Registreringsperiode:</strong> Fra d. 21 til d. 20 i den følgende måned.<br>
         <strong>Påmindelser:</strong> Sendes automatisk d. {REMINDER_DAY}. til alle aktive medarbejdere.<br>
@@ -424,9 +910,10 @@ def admin_interface():
         st.warning("Kunne ikke indlæse medarbejdere")
         return
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
-        ["Medarbejdere", "Tilføj ny", "Indsendelser", "Fælles besked", "Systeminfo", "Simuler"]
-    )
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "Medarbejdere", "Tilføj ny", "Indsendelser",
+        "Fælles besked", "Systeminfo", "Simuler", "Vejledning"
+    ])
 
     with tab1:
         st.subheader("Eksisterende medarbejdere")
@@ -434,19 +921,19 @@ def admin_interface():
             with st.expander(f"{row['Name']} ({row['Email']})"):
                 col1, col2 = st.columns(2)
                 with col1:
-                    new_name = st.text_input("Navn", value=row['Name'], key=f"name_{idx}")
-                    new_email = st.text_input("Email", value=row['Email'], key=f"email_{idx}")
-                    new_active = st.checkbox("Aktiv", value=row['Active'], key=f"active_{idx}")
+                    new_name   = st.text_input("Navn",  value=row['Name'],  key=f"name_{idx}")
+                    new_email  = st.text_input("Email", value=row['Email'], key=f"email_{idx}")
+                    new_active = st.checkbox("Aktiv",   value=row['Active'], key=f"active_{idx}")
                 with col2:
                     st.write("**Skema type:**")
-                    feriedage = st.checkbox("Feriedage", value=row['Feriedage'], key=f"feriedage_{idx}")
-                    feriefridag = st.checkbox("Feriefridag", value=row['Feriefridag'], key=f"feriefridag_{idx}")
-                    sygedage = st.checkbox("Sygedage", value=row['Sygedage'], key=f"sygedage_{idx}")
+                    feriedage     = st.checkbox("Feriedage",    value=row['Feriedage'],    key=f"feriedage_{idx}")
+                    feriefridag   = st.checkbox("Feriefridag",  value=row['Feriefridag'],  key=f"feriefridag_{idx}")
+                    sygedage      = st.checkbox("Sygedage",     value=row['Sygedage'],     key=f"sygedage_{idx}")
                     ekstra_hverdag = st.checkbox("Ekstra Hverdag", value=row['Ekstra_Hverdag'], key=f"hverdag_{idx}")
-                    ekstra_lørdag = st.checkbox("Ekstra Lørdag", value=row['Ekstra_Lørdag'], key=f"lørdag_{idx}")
-                    ekstra_søndag = st.checkbox("Ekstra Søndag", value=row['Ekstra_Søndag'], key=f"søndag_{idx}")
-                    ekstra_andet = st.checkbox("Ekstra Andet", value=row['Ekstra_Andet'], key=f"andet_{idx}")
-                    antal_timer = st.checkbox("Antal timer", value=row['Antal_timer'], key=f"timer_{idx}")
+                    ekstra_lørdag  = st.checkbox("Ekstra Lørdag",  value=row['Ekstra_Lørdag'],  key=f"lørdag_{idx}")
+                    ekstra_søndag  = st.checkbox("Ekstra Søndag",  value=row['Ekstra_Søndag'],  key=f"søndag_{idx}")
+                    ekstra_andet   = st.checkbox("Ekstra Andet",   value=row['Ekstra_Andet'],   key=f"andet_{idx}")
+                    antal_timer    = st.checkbox("Antal timer",    value=row['Antal_timer'],    key=f"timer_{idx}")
 
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -480,27 +967,25 @@ def admin_interface():
 
                 token = row['Token']
                 app_url = st.secrets.get("APP_URL", "https://your-app.streamlit.app")
-                link = f"{app_url}/?token={token}"
-                st.code(link)
+                st.code(f"{app_url}/?token={token}")
 
     with tab2:
         st.subheader("Tilføj ny medarbejder")
         with st.form("new_employee"):
-            name = st.text_input("Navn")
+            name  = st.text_input("Navn")
             email = st.text_input("Email")
             st.write("**Skema type:**")
             col1, col2 = st.columns(2)
             with col1:
-                feriedage = st.checkbox("Feriedage", value=True)
+                feriedage   = st.checkbox("Feriedage",   value=True)
                 feriefridag = st.checkbox("Feriefridag", value=True)
-                sygedage = st.checkbox("Sygedage", value=True)
+                sygedage    = st.checkbox("Sygedage",    value=True)
             with col2:
                 ekstra_hverdag = st.checkbox("Ekstra Hverdag")
-                ekstra_lørdag = st.checkbox("Ekstra Lørdag")
-                ekstra_søndag = st.checkbox("Ekstra Søndag")
-                ekstra_andet = st.checkbox("Ekstra Andet")
-                antal_timer = st.checkbox("Antal timer")
-
+                ekstra_lørdag  = st.checkbox("Ekstra Lørdag")
+                ekstra_søndag  = st.checkbox("Ekstra Søndag")
+                ekstra_andet   = st.checkbox("Ekstra Andet")
+                antal_timer    = st.checkbox("Antal timer")
             submitted = st.form_submit_button("Tilføj medarbejder")
             if submitted and name and email:
                 new_row = pd.DataFrame([{
@@ -518,15 +1003,12 @@ def admin_interface():
     with tab3:
         st.subheader("Indsendelser")
         period_key, period_label = get_current_period()
-        prev_key = get_previous_month(period_key)
+        prev_key      = get_previous_month(period_key)
         prev_prev_key = get_previous_month(prev_key)
         months_options = [period_key, prev_key, prev_prev_key]
-        month_labels = [f"{format_month_danish(m)} (periode slut)" for m in months_options]
-        selected_idx = st.selectbox(
-            "Vælg periode",
-            range(len(month_labels)),
-            format_func=lambda i: month_labels[i]
-        )
+        month_labels   = [f"{format_month_danish(m)} (periode slut)" for m in months_options]
+        selected_idx   = st.selectbox("Vælg periode", range(len(month_labels)),
+                                       format_func=lambda i: month_labels[i])
         month = months_options[selected_idx]
         for _, row in df.iterrows():
             if row['Active']:
@@ -555,8 +1037,7 @@ def admin_interface():
                 if not all([config.get('smtp_server'), config.get('smtp_username'), config.get('smtp_password')]):
                     st.error("SMTP-indstillinger mangler!")
                 else:
-                    sent_count = 0
-                    error_count = 0
+                    sent_count = error_count = 0
                     for emp in selected:
                         try:
                             body = f"Hej {emp['Name']},\n\n{message}\n\nVenlig hilsen,\nAdministrationen"
@@ -565,64 +1046,52 @@ def admin_interface():
                         except Exception as e:
                             st.error(f"Kunne ikke sende til {emp['Name']}: {str(e)}")
                             error_count += 1
-                    if sent_count > 0:
+                    if sent_count:
                         st.success(f"✅ Besked sendt til {sent_count} medarbejder(e)!")
-                    if error_count > 0:
+                    if error_count:
                         st.warning(f"Kunne ikke sende til {error_count} medarbejder(e)")
 
     with tab5:
         st.subheader("Systeminfo")
         config = load_config()
-
         st.markdown("### Repository")
         st.write(f"**Owner:** {REPO_OWNER}")
         st.write(f"**Repository:** {REPO_NAME}")
         app_url = st.secrets.get("APP_URL", "Ikke konfigureret")
         st.write(f"**App URL:** {app_url}")
-
         st.markdown("### Faste datoer")
         st.write(f"**Påmindelsesdag:** Den {REMINDER_DAY}. i måneden (alle aktive medarbejdere)")
         st.write(f"**Indberetningsfrist:** Den {DEADLINE_DAY}. i måneden")
         st.write(f"**Dataopsamling til admin:** Den {AGGREGATE_DAY}. i måneden")
         period_key, period_label = get_current_period()
         st.write(f"**Aktuel periode:** {period_label}")
-
         st.markdown("### SMTP / Email")
         st.write(f"**SMTP Server:** {config.get('smtp_server', 'Ikke sat')}")
         st.write(f"**SMTP Port:** {config.get('smtp_port', 'Ikke sat')}")
         st.write(f"**SMTP Brugernavn:** {config.get('smtp_username', 'Ikke sat')}")
-        password_val = config.get('smtp_password', '')
-        st.write(f"**SMTP Password:** {'*' * len(password_val) if password_val else 'Ikke sat'}")
+        pw = config.get('smtp_password', '')
+        st.write(f"**SMTP Password:** {'*' * len(pw) if pw else 'Ikke sat'}")
         st.write(f"**Admin Email:** {config.get('admin_email', 'Ikke sat')}")
-
         st.markdown("### Medarbejdere")
         for _, row in df.iterrows():
             with st.expander(f"{row['Name']} ({'Aktiv' if row['Active'] else 'Inaktiv'})"):
                 st.write(f"**Email:** {row['Email']}")
                 st.write(f"**Token:** `{row['Token']}`")
-                params = [
-                    label for col, label in [
-                        ('Feriedage', 'Feriedage'), ('Feriefridag', 'Feriefridag'),
-                        ('Sygedage', 'Sygedage'), ('Ekstra_Hverdag', 'Ekstra Hverdag'),
-                        ('Ekstra_Lørdag', 'Ekstra Lørdag'), ('Ekstra_Søndag', 'Ekstra Søndag'),
-                        ('Ekstra_Andet', 'Ekstra Andet'), ('Antal_timer', 'Antal timer'),
-                    ] if row[col]
-                ]
+                params = [label for col, label in [
+                    ('Feriedage','Feriedage'), ('Feriefridag','Feriefridag'),
+                    ('Sygedage','Sygedage'), ('Ekstra_Hverdag','Ekstra Hverdag'),
+                    ('Ekstra_Lørdag','Ekstra Lørdag'), ('Ekstra_Søndag','Ekstra Søndag'),
+                    ('Ekstra_Andet','Ekstra Andet'), ('Antal_timer','Antal timer'),
+                ] if row[col]]
                 st.write(f"**Parametre:** {', '.join(params) if params else 'Ingen'}")
-
         st.markdown("### GitHub Actions")
         st.info("Workflows kører dagligt kl. 08:00 UTC og tjekker om dags dato matcher de faste datoer.")
-        st.write("**Reminders workflow:** `.github/workflows/reminders.yml`")
-        st.write("**Aggregate workflow:** `.github/workflows/aggregate.yml`")
 
     with tab6:
         st.subheader("Simuler indsendelse")
         period_key, period_label = get_current_period()
         st.info(f"📅 Aktuel periode: **{period_label}**")
-        st.write(
-            "Klik for at sende en samlet opsummering af alle medarbejderes registreringer "
-            "til administratoren nu — uanset hvilken dato det er i dag."
-        )
+        st.write("Klik for at sende en samlet opsummering til administratoren nu — uanset hvilken dato det er.")
         if st.button("Send opsummering til admin nu", type="primary", key="simulate_btn"):
             config = load_config()
             admin_email = config.get('admin_email', '')
@@ -639,8 +1108,7 @@ def admin_interface():
                     st.dataframe(summary_df)
                     subject = f"Timeregnskab – {period_label}"
                     body = (
-                        f"Timeregnskab\n"
-                        f"Periode: {period_label}\n\n"
+                        f"Timeregnskab\nPeriode: {period_label}\n\n"
                         f"Indberettet: {submitted_count} ud af {total_count} medarbejdere\n\n"
                         f"{summary_df.to_string(index=False)}"
                     )
@@ -650,29 +1118,30 @@ def admin_interface():
                     except Exception as e:
                         st.error(f"Kunne ikke sende email: {str(e)}")
 
+    with tab7:
+        st.markdown(get_admin_guide_html(), unsafe_allow_html=True)
+
     st.divider()
 
     config = load_config()
     st.subheader("SMTP Email-indstillinger")
     st.info("Disse indstillinger bruges til at sende påmindelser og notifikationer.")
-
     col1, col2 = st.columns(2)
     with col1:
-        smtp_server = st.text_input("SMTP Server", value=config.get('smtp_server', 'smtp.gmail.com'))
-        smtp_port = st.number_input("SMTP Port", value=int(config.get('smtp_port', 587)), min_value=1, max_value=65535)
+        smtp_server   = st.text_input("SMTP Server",            value=config.get('smtp_server', 'smtp.gmail.com'))
+        smtp_port     = st.number_input("SMTP Port",            value=int(config.get('smtp_port', 587)), min_value=1, max_value=65535)
         smtp_username = st.text_input("SMTP Brugernavn (email)", value=config.get('smtp_username', ''))
     with col2:
         smtp_password = st.text_input("SMTP Password", value=config.get('smtp_password', ''), type="password")
-        admin_email = st.text_input("Admin Email (modtager)", value=config.get('admin_email', ''))
-
+        admin_email   = st.text_input("Admin Email (modtager)", value=config.get('admin_email', ''))
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Gem SMTP-indstillinger"):
-            config['smtp_server'] = smtp_server
-            config['smtp_port'] = smtp_port
+            config['smtp_server']   = smtp_server
+            config['smtp_port']     = smtp_port
             config['smtp_username'] = smtp_username
             config['smtp_password'] = smtp_password
-            config['admin_email'] = admin_email
+            config['admin_email']   = admin_email
             if save_config(config):
                 st.success("SMTP-indstillinger gemt!")
                 st.rerun()
@@ -680,8 +1149,7 @@ def admin_interface():
         if st.button("Send test-email"):
             try:
                 send_email_smtp(
-                    admin_email,
-                    "Test email fra Timeregnskab",
+                    admin_email, "Test email fra Timeregnskab",
                     "Dette er en test email for at verificere SMTP-indstillingerne.",
                     {'smtp_server': smtp_server, 'smtp_port': smtp_port,
                      'smtp_username': smtp_username, 'smtp_password': smtp_password}
@@ -700,17 +1168,9 @@ def employee_form():
     if not token:
         st.title("Timeregnskab")
         st.markdown("""
-        <div style="
-            background: #ffffff;
-            border: 1px solid #e8e8ed;
-            border-radius: 14px;
-            padding: 24px 28px;
-            margin: 20px 0;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.05);
-            font-size: 15px;
-            color: #1d1d1f;
-            line-height: 1.7;
-        ">
+        <div style="background:#ffffff;border:1px solid #e8e8ed;border-radius:14px;
+            padding:24px 28px;margin:20px 0;box-shadow:0 1px 6px rgba(0,0,0,0.05);
+            font-size:15px;color:#1d1d1f;line-height:1.7;">
             <strong>Medarbejdere:</strong> Du skal bruge dit personlige link for at tilgå formularen.<br>
             <strong>Admin:</strong> Tilføj <code>?admin=true</code> til URL'en for at logge ind.
         </div>
@@ -732,93 +1192,67 @@ def employee_form():
     existing = load_submission(emp['Name'], period_key)
     already_submitted = existing.get('udfyldt', False) if existing else False
 
-    st.title(f"Timeregnskab")
-    st.markdown(f"<h2 style='margin-top: -0.5rem; font-weight: 500; color: #6e6e73; font-size: 1.2rem;'>{emp['Name']}</h2>", unsafe_allow_html=True)
+    st.title("Timeregnskab")
+    st.markdown(
+        f"<h2 style='margin-top:-0.5rem;font-weight:500;color:#6e6e73;font-size:1.2rem;'>{emp['Name']}</h2>",
+        unsafe_allow_html=True
+    )
 
+    # Info card
     st.markdown(f"""
-    <div style="
-        background: #ffffff;
-        border: 1px solid #e8e8ed;
-        border-radius: 14px;
-        padding: 20px 24px;
-        margin: 16px 0 24px 0;
-        box-shadow: 0 1px 6px rgba(0,0,0,0.05);
-        font-size: 15px;
-        color: #1d1d1f;
-        line-height: 1.8;
-    ">
+    <div style="background:#ffffff;border:1px solid #e8e8ed;border-radius:14px;
+        padding:20px 24px;margin:16px 0 8px 0;box-shadow:0 1px 6px rgba(0,0,0,0.05);
+        font-size:15px;color:#1d1d1f;line-height:1.8;">
         <strong>Periode:</strong> {period_label}<br>
         <strong>Frist:</strong> Den {DEADLINE_DAY}. i måneden kl. 23:59<br>
         <strong>Påmindelse:</strong> Du modtager automatisk en påmindelsesmail d. {REMINDER_DAY}. — 2 dage før fristen<br>
-        <strong style="color: #c0392b;">Vigtigt:</strong> Timer der ikke er indberettet inden d. {DEADLINE_DAY}. registreres ikke og medtages først i næste måneds opgørelse.
+        <strong style="color:#c0392b;">Vigtigt:</strong> Timer der ikke er indberettet inden d. {DEADLINE_DAY}. registreres ikke og medtages <strong>ikke</strong> i denne måneds opgørelse.
     </div>
     """, unsafe_allow_html=True)
 
+    # Collapsible guide
+    with st.expander("📖 Vejledning — klik her for hjælp"):
+        st.markdown(get_employee_guide_html(period_label, REMINDER_DAY, DEADLINE_DAY),
+                    unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-top:8px;'></div>", unsafe_allow_html=True)
+
     if already_submitted:
-        st.success("✅ Du har allerede indberettet for denne periode. Du kan stadig rette i tallene og indsende igen.")
+        st.success("✅ Du har allerede indberettet for denne periode. Du kan stadig rette og genindsende.")
 
     data = {}
 
     if emp['Feriedage']:
-        data['feriedage'] = st.number_input(
-            "Feriedage",
-            value=existing.get('feriedage', 0) if existing else 0,
-            min_value=0, key="feriedage"
-        )
+        data['feriedage'] = st.number_input("Feriedage",
+            value=existing.get('feriedage', 0) if existing else 0, min_value=0, key="feriedage")
     if emp['Feriefridag']:
-        data['feriefridag'] = st.number_input(
-            "Feriefridage",
-            value=existing.get('feriefridag', 0) if existing else 0,
-            min_value=0, key="feriefridag"
-        )
+        data['feriefridag'] = st.number_input("Feriefridage",
+            value=existing.get('feriefridag', 0) if existing else 0, min_value=0, key="feriefridag")
     if emp['Sygedage']:
-        data['sygedage'] = st.number_input(
-            "Sygedage",
-            value=existing.get('sygedage', 0) if existing else 0,
-            min_value=0, key="sygedage"
-        )
+        data['sygedage'] = st.number_input("Sygedage",
+            value=existing.get('sygedage', 0) if existing else 0, min_value=0, key="sygedage")
     if emp['Ekstra_Hverdag']:
-        data['ekstra_hverdag'] = st.number_input(
-            "Ekstra timer (Hverdag)",
-            value=existing.get('ekstra_hverdag', 0) if existing else 0,
-            min_value=0, key="hverdag"
-        )
+        data['ekstra_hverdag'] = st.number_input("Ekstra timer (Hverdag)",
+            value=existing.get('ekstra_hverdag', 0) if existing else 0, min_value=0, key="hverdag")
     if emp['Ekstra_Lørdag']:
-        data['ekstra_lørdag'] = st.number_input(
-            "Ekstra timer (Lørdag)",
-            value=existing.get('ekstra_lørdag', 0) if existing else 0,
-            min_value=0, key="lørdag"
-        )
+        data['ekstra_lørdag'] = st.number_input("Ekstra timer (Lørdag)",
+            value=existing.get('ekstra_lørdag', 0) if existing else 0, min_value=0, key="lørdag")
     if emp['Ekstra_Søndag']:
-        data['ekstra_søndag'] = st.number_input(
-            "Ekstra timer (Søndag)",
-            value=existing.get('ekstra_søndag', 0) if existing else 0,
-            min_value=0, key="søndag"
-        )
+        data['ekstra_søndag'] = st.number_input("Ekstra timer (Søndag)",
+            value=existing.get('ekstra_søndag', 0) if existing else 0, min_value=0, key="søndag")
     if emp['Ekstra_Andet']:
-        data['ekstra_andet'] = st.number_input(
-            "Ekstra timer (Andet)",
-            value=existing.get('ekstra_andet', 0) if existing else 0,
-            min_value=0, key="andet"
-        )
+        data['ekstra_andet'] = st.number_input("Ekstra timer (Andet)",
+            value=existing.get('ekstra_andet', 0) if existing else 0, min_value=0, key="andet")
     if emp['Antal_timer']:
-        data['antal_timer'] = st.number_input(
-            "Antal timer i alt",
-            value=existing.get('antal_timer', 0) if existing else 0,
-            min_value=0, key="timer"
-        )
+        data['antal_timer'] = st.number_input("Antal timer i alt",
+            value=existing.get('antal_timer', 0) if existing else 0, min_value=0, key="timer")
 
-    # ── Indberet section ──
+    # Indberet section
     st.markdown(f"""
-    <div style="
-        background: #f5f5f7;
-        border: 1.5px solid #d2d2d7;
-        border-radius: 14px;
-        padding: 20px 24px 12px 24px;
-        margin: 28px 0 12px 0;
-    ">
-        <div style="font-size: 18px; font-weight: 600; color: #1d1d1f; margin-bottom: 6px;">Indberet</div>
-        <div style="font-size: 14px; color: #6e6e73; line-height: 1.5;">
+    <div style="background:#f5f5f7;border:1.5px solid #d2d2d7;border-radius:14px;
+        padding:20px 24px 12px 24px;margin:28px 0 12px 0;">
+        <div style="font-size:18px;font-weight:600;color:#1d1d1f;margin-bottom:6px;">Indberet</div>
+        <div style="font-size:14px;color:#6e6e73;line-height:1.5;">
             Marker afkrydsningsfeltet nedenfor og klik <strong>Indsend</strong> for at sende din
             registrering for perioden <strong>{period_label}</strong>.
         </div>
@@ -830,8 +1264,8 @@ def employee_form():
 
     if st.button("Indsend", type="primary"):
         data['timestamp'] = datetime.now().isoformat()
-        data['employee'] = emp['Name']
-        data['month'] = period_key
+        data['employee']  = emp['Name']
+        data['month']     = period_key
         if save_submission(emp['Name'], data, period_key):
             if data.get('udfyldt'):
                 st.success("✅ Indberettet!")
