@@ -65,7 +65,6 @@ def send_email(to_email, subject, body, smtp_config):
 def main():
     repo_owner = os.getenv("REPO_OWNER")
     repo_name = os.getenv("REPO_NAME")
-    app_url = os.getenv("APP_URL", "https://your-app.streamlit.app").rstrip('/')
 
     g = Github(os.getenv("GITHUB_TOKEN"))
     repo = g.get_user(repo_owner).get_repo(repo_name)
@@ -78,6 +77,12 @@ def main():
     except Exception as e:
         print(f"Kunne ikke indlæse config.json: {e}")
         return
+
+    # Læs app_url fra config.json (primær) eller env var (fallback)
+    app_url = config.get('app_url', '').rstrip('/') or os.getenv("APP_URL", "").rstrip('/')
+    if not app_url:
+        print("ADVARSEL: app_url er ikke konfigureret i config.json eller APP_URL env var — links i mails vil være ufuldstændige!")
+        app_url = ""
 
     now = datetime.now()
     if now.day != REMINDER_DAY:

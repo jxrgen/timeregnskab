@@ -537,6 +537,14 @@ code {{
       <div class="ag-card-title">🔗 Links er permanente</div>
       <p class="ag-card-desc">Medarbejdernes links ændrer sig kun hvis du klikker "Ny token". De kan bogmærke linket og bruge det månedligt.</p>
     </div>
+    <div class="ag-card" style="border-left: 3px solid #ff9500;">
+      <div class="ag-card-title">⚠️ Ændr ikke token uden besked</div>
+      <p class="ag-card-desc">Klikker du "Ny token", <strong>mister medarbejderen adgang via sit gamle link</strong>. Husk altid at sende det nye link til medarbejderen med det samme.</p>
+    </div>
+    <div class="ag-card" style="border-left: 3px solid #ff9500;">
+      <div class="ag-card-title">📬 Tjek spammappen</div>
+      <p class="ag-card-desc">Automatiske mails fra systemet kan ende i spam- eller junk-mappen. Bed medarbejderne om at tilføje systemets emailadresse til deres kontakter, og tjek selv at admin-mailen d. {AGGREGATE_DAY}. ikke ender i spam.</p>
+    </div>
     <div class="ag-card">
       <div class="ag-card-title">🔄 Kan genindsendes</div>
       <p class="ag-card-desc">Medarbejdere kan rette og genindsende inden d. {DEADLINE_DAY}. Det seneste Indsend overskriver det forrige.</p>
@@ -651,6 +659,10 @@ def get_employee_guide_html(period_label, reminder_day, deadline_day):
     <div class="eg-callout danger">
       <span>⚠️</span>
       <div><strong>Mangler du at indsende inden d. {deadline_day}.?</strong> Dine timer registreres ikke og medtages <strong>ikke</strong> i denne måneds opgørelse. Kontakt din administrator.</div>
+    </div>
+    <div class="eg-callout info">
+      <span>📬</span>
+      <div>Modtager du ikke påmindelsesmailen d. {reminder_day}.? <strong>Tjek din spammappe</strong> — mails fra systemet kan nogle gange havne der. Tilføj systemets emailadresse til dine kontakter for at undgå det fremover.</div>
     </div>
   </div>
 
@@ -1148,12 +1160,15 @@ def admin_interface():
         st.info(f"📅 Aktuel periode: **{period_label}**")
         st.write("Klik for at sende en samlet opsummering til administratoren nu — uanset hvilken dato det er.")
         if st.button("Send opsummering til admin nu", type="primary", key="simulate_btn"):
+            # Altid hent frisk config fra GitHub — bypass session state cache
+            st.session_state.pop('config_data', None)
             config = load_config()
             admin_email = config.get('admin_email', '')
+            missing = [k for k in ('smtp_server', 'smtp_username', 'smtp_password') if not config.get(k)]
             if not admin_email:
-                st.error("Admin email ikke konfigureret!")
-            elif not all([config.get('smtp_server'), config.get('smtp_username'), config.get('smtp_password')]):
-                st.error("SMTP-indstillinger mangler!")
+                st.error("Admin email ikke konfigureret — sæt den under SMTP-indstillinger nedenfor.")
+            elif missing:
+                st.error(f"SMTP-indstillinger mangler: {', '.join(missing)}")
             else:
                 with st.spinner("Indsamler data og sender email..."):
                     summary_df = collect_period_data(df, period_key)
@@ -1171,7 +1186,7 @@ def admin_interface():
                         send_email_smtp(admin_email, subject, body, config)
                         st.success(f"✅ Opsummering sendt til {admin_email}!")
                     except Exception as e:
-                        st.error(f"Kunne ikke sende email: {str(e)}")
+                        st.error(f"❌ Emailfejl: {str(e)}")
 
     with tab7:
         st.markdown(get_admin_guide_html(), unsafe_allow_html=True)
@@ -1189,6 +1204,9 @@ def admin_interface():
     with col2:
         smtp_password = st.text_input("SMTP Password", value=config.get('smtp_password', ''), type="password")
         admin_email   = st.text_input("Admin Email (modtager)", value=config.get('admin_email', ''))
+        app_url_input = st.text_input("App URL", value=config.get('app_url', ''),
+                                      placeholder="https://din-app.streamlit.app",
+                                      help="Bruges i påmindelsesmails til medarbejdere")
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Gem SMTP-indstillinger"):
@@ -1197,10 +1215,11 @@ def admin_interface():
             config['smtp_username'] = smtp_username
             config['smtp_password'] = smtp_password
             config['admin_email']   = admin_email
+            config['app_url']       = app_url_input.rstrip('/')
             with st.spinner("Gemmer SMTP-indstillinger..."):
                 success = save_config(config)
             if success:
-                st.session_state['_toast'] = "✅ SMTP-indstillinger gemt!"
+                st.session_state['_toast'] = "✅ Indstillinger gemt!"
                 st.rerun()
     with col2:
         if st.button("Send test-email"):
@@ -1213,7 +1232,7 @@ def admin_interface():
                 )
                 st.success("✅ Test-email sendt!")
             except Exception as e:
-                st.error(f"❌ Kunne ikke sende test-email: {str(e)}")
+                st.error(f"❌ Fejl: {str(e)}")
 
 
 # ─────────────────────────────────────────────────────

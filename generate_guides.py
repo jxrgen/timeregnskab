@@ -364,6 +364,12 @@ def build_admin_pdf(path):
         "💡 Tip: Du kan til enhver tid sende tabellen manuelt via fanebladet <b>Simuler</b>.",
         s["tip"]
     ))
+    story.append(Spacer(1, 3*mm))
+    story.append(InfoBox([
+        "Tjek spammappen: Automatiske mails fra systemet kan havne i spam- eller junk-mappen.",
+        "Bed medarbejderne om at tilføje systemets emailadresse til deres kontakter, og tjek",
+        "at din egen admin-mail (d. 21) ikke ender i spam.",
+    ], cw, "📬"))
 
     # ── 4. Administrer medarbejdere ──────────────────────────────────
     story.append(PageBreak())
@@ -403,6 +409,12 @@ def build_admin_pdf(path):
         "Sletning kan ikke fortrydes. Tidligere indsendelser fra medarbejderen bevares i arkivet.",
         s["body"]
     ))
+    story.append(Spacer(1, 3*mm))
+    story.append(InfoBox([
+        "Vigtigt: Klikker du 'Ny token', mister medarbejderen adgang via sit gamle link.",
+        "Send altid det nye link til medarbejderen med det samme — ellers kan de",
+        "ikke logge ind og indberette deres timer.",
+    ], cw, "⚠️"))
     story.append(Spacer(1, 4*mm))
 
     story.append(Paragraph("Skemafelter — hvad vises for hvem", s["h3"]))
@@ -434,6 +446,11 @@ def build_admin_pdf(path):
             "Opsamlingstabellen (d. 21) samler data fra ALLE medarbejdere, også dem der",
             "ikke har indberettet — disse markeres tydeligt med 'Ikke indberettet'.",
         ], cw, "📊"),
+        Spacer(1, 3*mm),
+        InfoBox([
+            "Modtager du ikke admin-mailen d. 21? Tjek din spammappe.",
+            "Tilfoej systemets afsenderadresse til dine kontakter for at undgaa det fremover.",
+        ], cw, "📬"),
         Spacer(1, 6*mm),
     ]))
 
