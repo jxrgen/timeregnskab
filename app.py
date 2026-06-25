@@ -673,34 +673,37 @@ def get_employee_guide_html(period_label, reminder_day, deadline_day):
 # ─────────────────────────────────────────────────────
 
 def get_github_client():
-    token = None
-    try:
-        token = st.secrets["GITHUB_TOKEN"]
-    except:
-        token = os.getenv("GITHUB_TOKEN")
-    if not token:
-        st.error("GitHub token ikke konfigureret")
-        return None
-    return Github(token)
+    if 'gh_client' not in st.session_state:
+        token = None
+        try:
+            token = st.secrets["GITHUB_TOKEN"]
+        except:
+            token = os.getenv("GITHUB_TOKEN")
+        if not token:
+            st.error("GitHub token ikke konfigureret")
+            return None
+        st.session_state['gh_client'] = Github(token)
+    return st.session_state['gh_client']
 
 
 def load_employees():
-    try:
-        g = get_github_client()
-        if g:
-            repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
-            content = repo.get_contents(EMPLOYEES_FILE)
-            import base64
-            csv_content = base64.b64decode(content.content).decode('utf-8')
-            from io import StringIO
-            df = pd.read_csv(StringIO(csv_content))
-            return df
-        else:
-            st.error("Ingen GitHub forbindelse")
-            return pd.DataFrame()
-    except Exception as e:
-        st.error(f"Kunne ikke indlæse medarbejdere: {str(e)}")
-        return pd.DataFrame()
+    if 'employees_df' not in st.session_state:
+        try:
+            g = get_github_client()
+            if g:
+                repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
+                content = repo.get_contents(EMPLOYEES_FILE)
+                import base64
+                csv_content = base64.b64decode(content.content).decode('utf-8')
+                from io import StringIO
+                st.session_state['employees_df'] = pd.read_csv(StringIO(csv_content))
+            else:
+                st.error("Ingen GitHub forbindelse")
+                st.session_state['employees_df'] = pd.DataFrame()
+        except Exception as e:
+            st.error(f"Kunne ikke indlæse medarbejdere: {str(e)}")
+            st.session_state['employees_df'] = pd.DataFrame()
+    return st.session_state['employees_df']
 
 
 def save_employees(df):
@@ -714,6 +717,7 @@ def save_employees(df):
                 repo.update_file(EMPLOYEES_FILE, "Opdateret medarbejdere", content, file.sha)
             except:
                 repo.create_file(EMPLOYEES_FILE, "Oprettet medarbejdere", content)
+            st.session_state['employees_df'] = df.reset_index(drop=True)
             return True
         return False
     except Exception as e:
@@ -759,16 +763,19 @@ def generate_token():
 
 
 def load_config():
-    try:
-        g = get_github_client()
-        if g:
-            repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
-            content = repo.get_contents("config.json")
-            import base64
-            return json.loads(base64.b64decode(content.content).decode('utf-8'))
-    except:
-        pass
-    return {}
+    if 'config_data' not in st.session_state:
+        try:
+            g = get_github_client()
+            if g:
+                repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
+                content = repo.get_contents("config.json")
+                import base64
+                st.session_state['config_data'] = json.loads(base64.b64decode(content.content).decode('utf-8'))
+        except:
+            pass
+        if 'config_data' not in st.session_state:
+            st.session_state['config_data'] = {}
+    return st.session_state['config_data']
 
 
 def save_config(config):
@@ -782,6 +789,7 @@ def save_config(config):
                 repo.update_file("config.json", "Opdateret konfiguration", content, file.sha)
             except:
                 repo.create_file("config.json", "Oprettet konfiguration", content)
+            st.session_state['config_data'] = config
             return True
     except Exception as e:
         st.error(f"Kunne ikke gemme konfiguration: {str(e)}")
@@ -893,6 +901,8 @@ def admin_interface():
         return
 
     st.success("Logget ind")
+    if _toast := st.session_state.pop('_toast', None):
+        st.toast(_toast)
 
     st.markdown(f"""
     <div style="
@@ -941,25 +951,31 @@ def admin_interface():
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     if st.button("Gem ændringer", key=f"save_{idx}"):
-                        df.at[idx, 'Name'] = new_name
-                        df.at[idx, 'Email'] = new_email
-                        df.at[idx, 'Active'] = new_active
-                        df.at[idx, 'Feriedage'] = feriedage
-                        df.at[idx, 'Feriefridag'] = feriefridag
-                        df.at[idx, 'Sygedage'] = sygedage
-                        df.at[idx, 'Ekstra_Hverdag'] = ekstra_hverdag
-                        df.at[idx, 'Ekstra_Lørdag'] = ekstra_lørdag
-                        df.at[idx, 'Ekstra_Søndag'] = ekstra_søndag
-                        df.at[idx, 'Ekstra_Andet'] = ekstra_andet
-                        df.at[idx, 'Antal_timer'] = antal_timer
-                        if save_employees(df):
-                            st.success("Gemt!")
+                        updated = df.copy()
+                        updated.at[idx, 'Name'] = new_name
+                        updated.at[idx, 'Email'] = new_email
+                        updated.at[idx, 'Active'] = new_active
+                        updated.at[idx, 'Feriedage'] = feriedage
+                        updated.at[idx, 'Feriefridag'] = feriefridag
+                        updated.at[idx, 'Sygedage'] = sygedage
+                        updated.at[idx, 'Ekstra_Hverdag'] = ekstra_hverdag
+                        updated.at[idx, 'Ekstra_Lørdag'] = ekstra_lørdag
+                        updated.at[idx, 'Ekstra_Søndag'] = ekstra_søndag
+                        updated.at[idx, 'Ekstra_Andet'] = ekstra_andet
+                        updated.at[idx, 'Antal_timer'] = antal_timer
+                        with st.spinner("Gemmer..."):
+                            success = save_employees(updated)
+                        if success:
+                            st.session_state['_toast'] = f"✅ {new_name} gemt"
                             st.rerun()
                 with col2:
                     if st.button("Ny token", key=f"token_{idx}"):
-                        df.at[idx, 'Token'] = generate_token()
-                        if save_employees(df):
-                            st.success("Ny token genereret")
+                        updated = df.copy()
+                        updated.at[idx, 'Token'] = generate_token()
+                        with st.spinner("Genererer token..."):
+                            success = save_employees(updated)
+                        if success:
+                            st.session_state['_toast'] = f"✅ Nyt link genereret til {row['Name']}"
                             st.rerun()
                 with col3:
                     if st.button("Slet", key=f"delete_{idx}"):
@@ -967,6 +983,7 @@ def admin_interface():
                         with st.spinner("Sletter..."):
                             success = save_employees(new_df)
                         if success:
+                            st.session_state['_toast'] = f"✅ {row['Name']} er slettet"
                             st.rerun()
                         else:
                             st.error("Kunne ikke slette")
@@ -977,7 +994,8 @@ def admin_interface():
 
     with tab2:
         st.subheader("Tilføj ny medarbejder")
-        with st.form("new_employee"):
+        form_id = st.session_state.get('_form_id', 0)
+        with st.form(f"new_employee_{form_id}"):
             name  = st.text_input("Navn")
             email = st.text_input("Email")
             st.write("**Skema type:**")
@@ -1001,10 +1019,15 @@ def admin_interface():
                     'Ekstra_Søndag': ekstra_søndag, 'Ekstra_Andet': ekstra_andet,
                     'Antal_timer': antal_timer, 'Token': generate_token()
                 }])
-                df = pd.concat([df, new_row], ignore_index=True)
-                if save_employees(df):
-                    st.success(f"Tilføjet {name}!")
+                new_df = pd.concat([df, new_row], ignore_index=True)
+                with st.spinner("Opretter medarbejder..."):
+                    success = save_employees(new_df)
+                if success:
+                    st.session_state['_form_id'] = form_id + 1
+                    st.session_state['_toast'] = f"✅ {name} er tilføjet!"
                     st.rerun()
+            elif submitted:
+                st.warning("Udfyld venligst navn og email")
 
     with tab3:
         st.subheader("Indsendelser")
@@ -1148,8 +1171,10 @@ def admin_interface():
             config['smtp_username'] = smtp_username
             config['smtp_password'] = smtp_password
             config['admin_email']   = admin_email
-            if save_config(config):
-                st.success("SMTP-indstillinger gemt!")
+            with st.spinner("Gemmer SMTP-indstillinger..."):
+                success = save_config(config)
+            if success:
+                st.session_state['_toast'] = "✅ SMTP-indstillinger gemt!"
                 st.rerun()
     with col2:
         if st.button("Send test-email"):
