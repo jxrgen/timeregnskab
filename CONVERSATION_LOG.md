@@ -361,3 +361,61 @@ Hvis den nye implementering ikke virker, kan du rulle tilbage ved at kopiere fil
 - `752a485` — Ret træg UI: cache data i session state, toast-bekræftelser, ryd formular
 - `56c646b` — Emailvalidering og slettebekræftelse
 - `53783a4` — Ret slettebekræftelse: 'Ja'/'Nej' i stedet for 'Ja, slet'/'Annuller'
+
+---
+
+## Session 25. juni 2026 (del 2) — PDF-vejledninger, UX-forbedringer, mailfix
+
+### Hvad der blev lavet
+
+#### 1. To PDF-vejledninger genereret
+- `Timeregnskab_Administratorvejledning.pdf` — Apple-design, tidslinje, tab-gennemgang, SMTP-guide, FAQ
+- `Timeregnskab_Medarbejdervejledning.pdf` — trin-for-trin, feltforklaringer, FAQ
+- `generate_guides.py` — script til at genskabe PDF'erne (kør med `python3 generate_guides.py`)
+- Bruger `reportlab` (allerede installeret)
+
+#### 2. Medarbejderside: navneboks
+- Medarbejderens navn vises nu i en blå gradient-ramme øverst ("Logget ind som X")
+
+#### 3. Admin Indsendelser: Opdater-knap
+- `🔄 Opdater`-knap henter seneste status fra GitHub uden at refreshe hele siden
+
+#### 4. Emailvalidering + slettebekræftelse (fra del 1, nu komplet)
+- `is_valid_email()` med regex — valideres ved tilføj og gem
+- Slet-knap: Ja/Nej bekræftelsesdialog via session state
+
+#### 5. App URL i config
+- Nyt felt "App URL" under SMTP-indstillinger — gemmes i `config.json`
+- `send_reminders.py` og `aggregate_data.py` læser URL herfra (ikke env var)
+- Løser problemet med `/?token=...` uden domæne i påmindelsesmails
+
+#### 6. SMTP password-bug rettet
+- Passwordfeltet vises intentionelt tomt (browser-sikkerhed)
+- Ved gem bevares eksisterende password hvis feltet er tomt (`if smtp_password:`)
+- Advarsel vises øverst i SMTP-sektionen hvis password ikke er gemt
+- Test-email bruger gemt password som fallback hvis feltet er tomt
+- **Rodårsag til mailstop:** Da admin-email blev ændret fra timereg@vimby.dk til digitalt@vimby.dk, blev det tomme passwordfelt gemt og overskrev det rigtige password
+
+#### 7. SMTP EHLO-fix
+- `ehlo()` tilføjet før og efter `starttls()` — fikser `501 AUTH mechanism`-fejl på mange SMTP-servere
+- `server.quit()` pakket i try/except
+
+#### 8. HTML-formateret opsamlingsmail
+- Ny `build_summary_html()` funktion: gradient-header, statistikbokse (grøn/rød), pæn tabel
+- Grønt ✔ ved indberettede, rødt ✘ ved manglende
+- Sendes som multipart/alternative (HTML + plain-text fallback)
+- Opdateret i både `app.py` (Simuler) og `scripts/aggregate_data.py`
+
+#### 9. Spam-advarsel + token-advarsel i alle guides
+- Spam-advarsel: HTML-guides (admin + medarbejder) og begge PDF'er
+- Token-advarsel: admin HTML-guide og admin PDF — "Ny token invaliderer medarbejderens link, husk at sende det nye"
+
+#### 10. Simuler-fane forbedret
+- Force-reload af config fra GitHub ved hvert klik (bypass session state cache)
+- Præcis fejlbesked ved manglende SMTP-felter
+- Success/error vises nu uden for `st.spinner()` — var usynlig før
+
+### Udestående / næste gang
+- **Performance:** Systemet er 10–15 sek. langsomt pga. GitHub-API-arkitektur. Løsning er migration til Supabase (PostgreSQL). Bruger har valgt at vente med dette.
+- Supabase-plan: beholde Streamlit Cloud, erstatte GitHub-filstorage med Supabase-tabeller (employees, submissions, config). Alle API-kald: 20–100 ms i stedet for 1–3 sek.
+- Husk: App URL skal sættes i admin → SMTP-indstillinger for at påmindelsesmails får komplet link
