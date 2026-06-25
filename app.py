@@ -994,7 +994,7 @@ def admin_interface():
                     st.warning(f"Er du sikker på, at du vil slette **{row['Name']}**? Dette kan ikke fortrydes.")
                     cy, cn = st.columns(2)
                     with cy:
-                        if st.button("Ja, slet", key=f"confirm_yes_{idx}"):
+                        if st.button("Ja", key=f"confirm_yes_{idx}"):
                             new_df = df.drop(idx).reset_index(drop=True)
                             with st.spinner("Sletter..."):
                                 success = save_employees(new_df)
@@ -1003,7 +1003,7 @@ def admin_interface():
                                 st.session_state['_toast'] = f"✅ {row['Name']} er slettet"
                             st.rerun()
                     with cn:
-                        if st.button("Annuller", key=f"confirm_no_{idx}"):
+                        if st.button("Nej", key=f"confirm_no_{idx}"):
                             st.session_state.pop('_confirm_delete', None)
                             st.rerun()
 
