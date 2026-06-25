@@ -857,16 +857,91 @@ def get_current_period():
 # Email helper
 # ─────────────────────────────────────────────────────
 
-def send_email_smtp(to_email, subject, body, config):
+def build_summary_html(period_label, summary_df):
+    submitted_count = (summary_df['Indberettet'] == 'Ja').sum()
+    total_count = len(summary_df)
+    cols = [c for c in summary_df.columns if c not in ('Medarbejder', 'Indberettet')]
+    header_cells = ''.join(f'<th>{c}</th>' for c in cols)
+    rows_html = ''
+    for _, row in summary_df.iterrows():
+        submitted = row['Indberettet'] == 'Ja'
+        badge = '<span style="color:#34c759;font-size:16px;">✔</span> Ja' if submitted else '<span style="color:#ff3b30;font-size:16px;">✘</span> Nej'
+        bg = '#ffffff' if submitted else '#fff8f8'
+        data_cells = ''.join(f'<td style="text-align:center;">{row[c]}</td>' for c in cols)
+        rows_html += f'''
+        <tr style="background:{bg};">
+            <td style="font-weight:600;">{row["Medarbejder"]}</td>
+            <td style="text-align:center;">{badge}</td>
+            {data_cells}
+        </tr>'''
+    return f'''<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f7;padding:32px 0;">
+<tr><td align="center">
+<table width="640" cellpadding="0" cellspacing="0" style="max-width:640px;width:100%;">
+
+  <!-- Header -->
+  <tr><td style="background:linear-gradient(135deg,#0071e3,#34aadc);border-radius:16px 16px 0 0;padding:28px 32px;">
+    <div style="font-size:22px;font-weight:700;color:#fff;margin-bottom:4px;">📊 Timeregnskab</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.85);">Periode: {period_label}</div>
+  </td></tr>
+
+  <!-- Stats -->
+  <tr><td style="background:#fff;padding:20px 32px 16px;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td width="50%" style="padding:12px 16px;background:#f0faf4;border-radius:10px;text-align:center;">
+        <div style="font-size:28px;font-weight:700;color:#34c759;">{submitted_count}</div>
+        <div style="font-size:12px;color:#6e6e73;margin-top:2px;">Indberettet</div>
+      </td>
+      <td width="4px"></td>
+      <td width="50%" style="padding:12px 16px;background:#fff8f8;border-radius:10px;text-align:center;">
+        <div style="font-size:28px;font-weight:700;color:#ff3b30;">{total_count - submitted_count}</div>
+        <div style="font-size:12px;color:#6e6e73;margin-top:2px;">Ikke indberettet</div>
+      </td>
+    </tr>
+    </table>
+  </td></tr>
+
+  <!-- Table -->
+  <tr><td style="background:#fff;padding:0 32px 28px;">
+    <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#0071e3;color:#fff;">
+          <th style="text-align:left;padding:10px 12px;border-radius:8px 0 0 0;">Medarbejder</th>
+          <th style="text-align:center;padding:10px 12px;">Status</th>
+          {header_cells}
+        </tr>
+      </thead>
+      <tbody>
+        {rows_html}
+      </tbody>
+    </table>
+  </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="background:#f5f5f7;border-radius:0 0 16px 16px;padding:16px 32px;text-align:center;">
+    <div style="font-size:11px;color:#6e6e73;">Automatisk genereret af Timeregnskab-systemet</div>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body></html>'''
+
+
+def send_email_smtp(to_email, subject, body, config, html=None):
     smtp_server = config.get('smtp_server', '')
     smtp_port = int(config.get('smtp_port', 587))
     smtp_username = config.get('smtp_username', '')
     smtp_password = config.get('smtp_password', '')
-    msg = MIMEMultipart()
+    msg = MIMEMultipart('alternative')
     msg['From'] = smtp_username
     msg['To'] = to_email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
+    if html:
+        msg.attach(MIMEText(html, 'html', 'utf-8'))
     if smtp_port == 465:
         server = smtplib.SMTP_SSL(smtp_server, smtp_port)
         server.ehlo()
@@ -1181,16 +1256,17 @@ def admin_interface():
                     submitted_count = (summary_df['Indberettet'] == 'Ja').sum()
                     total_count = len(summary_df)
                 subject = f"Timeregnskab – {period_label}"
-                body = (
-                    f"Timeregnskab\nPeriode: {period_label}\n\n"
-                    f"Indberettet: {submitted_count} ud af {total_count} medarbejdere\n\n"
+                plain = (
+                    f"Timeregnskab — Periode: {period_label}\n"
+                    f"Indberettet: {submitted_count} ud af {total_count}\n\n"
                     f"{summary_df.to_string(index=False)}"
                 )
+                html_body = build_summary_html(period_label, summary_df)
                 st.write("**Forhåndsvisning:**")
                 st.dataframe(summary_df)
                 try:
                     with st.spinner(f"Sender til {admin_email}..."):
-                        send_email_smtp(admin_email, subject, body, config)
+                        send_email_smtp(admin_email, subject, plain, config, html=html_body)
                     st.success(f"✅ Opsummering sendt til {admin_email}!")
                 except Exception as e:
                     st.error(f"❌ Emailfejl: {str(e)}")
