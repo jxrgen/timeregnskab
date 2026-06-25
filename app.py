@@ -1070,18 +1070,31 @@ def admin_interface():
                                 st.session_state['_toast'] = f"✅ {new_name} gemt"
                                 st.rerun()
                 with col2:
-                    if st.button("Ny token", key=f"token_{idx}"):
-                        updated = df.copy()
-                        updated.at[idx, 'Token'] = generate_token()
-                        with st.spinner("Genererer token..."):
-                            success = save_employees(updated)
-                        if success:
-                            st.session_state['_toast'] = f"✅ Nyt link genereret til {row['Name']}"
-                            st.rerun()
+                    if st.button("Ny token", key=f"token_{idx}", type="secondary"):
+                        st.session_state['_confirm_token'] = idx
+                        st.rerun()
                 with col3:
                     if st.button("Slet", key=f"delete_{idx}", type="secondary"):
                         st.session_state['_confirm_delete'] = idx
                         st.rerun()
+
+                if st.session_state.get('_confirm_token') == idx:
+                    st.warning(f"Er du sikker? **{row['Name']}s** nuværende link holder op med at virke med det samme. Husk at sende det nye link til medarbejderen.")
+                    cy, cn = st.columns(2)
+                    with cy:
+                        if st.button("Ja", key=f"confirm_token_yes_{idx}"):
+                            updated = df.copy()
+                            updated.at[idx, 'Token'] = generate_token()
+                            with st.spinner("Genererer nyt link..."):
+                                success = save_employees(updated)
+                            st.session_state.pop('_confirm_token', None)
+                            if success:
+                                st.session_state['_toast'] = f"✅ Nyt link genereret til {row['Name']} — husk at sende det!"
+                            st.rerun()
+                    with cn:
+                        if st.button("Nej", key=f"confirm_token_no_{idx}"):
+                            st.session_state.pop('_confirm_token', None)
+                            st.rerun()
 
                 if st.session_state.get('_confirm_delete') == idx:
                     st.warning(f"Er du sikker på, at du vil slette **{row['Name']}**? Dette kan ikke fortrydes.")
