@@ -5,6 +5,7 @@ from github import Github
 import json
 from datetime import datetime
 import secrets
+import re
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -762,6 +763,10 @@ def generate_token():
     return secrets.token_urlsafe(16)
 
 
+def is_valid_email(email):
+    return bool(re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email.strip()))
+
+
 def load_config():
     if 'config_data' not in st.session_state:
         try:
@@ -951,23 +956,26 @@ def admin_interface():
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     if st.button("Gem ændringer", key=f"save_{idx}"):
-                        updated = df.copy()
-                        updated.at[idx, 'Name'] = new_name
-                        updated.at[idx, 'Email'] = new_email
-                        updated.at[idx, 'Active'] = new_active
-                        updated.at[idx, 'Feriedage'] = feriedage
-                        updated.at[idx, 'Feriefridag'] = feriefridag
-                        updated.at[idx, 'Sygedage'] = sygedage
-                        updated.at[idx, 'Ekstra_Hverdag'] = ekstra_hverdag
-                        updated.at[idx, 'Ekstra_Lørdag'] = ekstra_lørdag
-                        updated.at[idx, 'Ekstra_Søndag'] = ekstra_søndag
-                        updated.at[idx, 'Ekstra_Andet'] = ekstra_andet
-                        updated.at[idx, 'Antal_timer'] = antal_timer
-                        with st.spinner("Gemmer..."):
-                            success = save_employees(updated)
-                        if success:
-                            st.session_state['_toast'] = f"✅ {new_name} gemt"
-                            st.rerun()
+                        if not is_valid_email(new_email):
+                            st.error("Ugyldig emailadresse")
+                        else:
+                            updated = df.copy()
+                            updated.at[idx, 'Name'] = new_name
+                            updated.at[idx, 'Email'] = new_email
+                            updated.at[idx, 'Active'] = new_active
+                            updated.at[idx, 'Feriedage'] = feriedage
+                            updated.at[idx, 'Feriefridag'] = feriefridag
+                            updated.at[idx, 'Sygedage'] = sygedage
+                            updated.at[idx, 'Ekstra_Hverdag'] = ekstra_hverdag
+                            updated.at[idx, 'Ekstra_Lørdag'] = ekstra_lørdag
+                            updated.at[idx, 'Ekstra_Søndag'] = ekstra_søndag
+                            updated.at[idx, 'Ekstra_Andet'] = ekstra_andet
+                            updated.at[idx, 'Antal_timer'] = antal_timer
+                            with st.spinner("Gemmer..."):
+                                success = save_employees(updated)
+                            if success:
+                                st.session_state['_toast'] = f"✅ {new_name} gemt"
+                                st.rerun()
                 with col2:
                     if st.button("Ny token", key=f"token_{idx}"):
                         updated = df.copy()
@@ -978,15 +986,26 @@ def admin_interface():
                             st.session_state['_toast'] = f"✅ Nyt link genereret til {row['Name']}"
                             st.rerun()
                 with col3:
-                    if st.button("Slet", key=f"delete_{idx}"):
-                        new_df = df.drop(idx).reset_index(drop=True)
-                        with st.spinner("Sletter..."):
-                            success = save_employees(new_df)
-                        if success:
-                            st.session_state['_toast'] = f"✅ {row['Name']} er slettet"
+                    if st.button("Slet", key=f"delete_{idx}", type="secondary"):
+                        st.session_state['_confirm_delete'] = idx
+                        st.rerun()
+
+                if st.session_state.get('_confirm_delete') == idx:
+                    st.warning(f"Er du sikker på, at du vil slette **{row['Name']}**? Dette kan ikke fortrydes.")
+                    cy, cn = st.columns(2)
+                    with cy:
+                        if st.button("Ja, slet", key=f"confirm_yes_{idx}"):
+                            new_df = df.drop(idx).reset_index(drop=True)
+                            with st.spinner("Sletter..."):
+                                success = save_employees(new_df)
+                            st.session_state.pop('_confirm_delete', None)
+                            if success:
+                                st.session_state['_toast'] = f"✅ {row['Name']} er slettet"
                             st.rerun()
-                        else:
-                            st.error("Kunne ikke slette")
+                    with cn:
+                        if st.button("Annuller", key=f"confirm_no_{idx}"):
+                            st.session_state.pop('_confirm_delete', None)
+                            st.rerun()
 
                 token = row['Token']
                 app_url = st.secrets.get("APP_URL", "https://your-app.streamlit.app")
@@ -1011,23 +1030,26 @@ def admin_interface():
                 ekstra_andet   = st.checkbox("Ekstra Andet")
                 antal_timer    = st.checkbox("Antal timer")
             submitted = st.form_submit_button("Tilføj medarbejder")
-            if submitted and name and email:
-                new_row = pd.DataFrame([{
-                    'Name': name, 'Email': email, 'Active': True,
-                    'Feriedage': feriedage, 'Feriefridag': feriefridag, 'Sygedage': sygedage,
-                    'Ekstra_Hverdag': ekstra_hverdag, 'Ekstra_Lørdag': ekstra_lørdag,
-                    'Ekstra_Søndag': ekstra_søndag, 'Ekstra_Andet': ekstra_andet,
-                    'Antal_timer': antal_timer, 'Token': generate_token()
-                }])
-                new_df = pd.concat([df, new_row], ignore_index=True)
-                with st.spinner("Opretter medarbejder..."):
-                    success = save_employees(new_df)
-                if success:
-                    st.session_state['_form_id'] = form_id + 1
-                    st.session_state['_toast'] = f"✅ {name} er tilføjet!"
-                    st.rerun()
-            elif submitted:
-                st.warning("Udfyld venligst navn og email")
+            if submitted:
+                if not name or not email:
+                    st.warning("Udfyld venligst navn og email")
+                elif not is_valid_email(email):
+                    st.error("Ugyldig emailadresse — tjek formatet (fx navn@firma.dk)")
+                else:
+                    new_row = pd.DataFrame([{
+                        'Name': name, 'Email': email, 'Active': True,
+                        'Feriedage': feriedage, 'Feriefridag': feriefridag, 'Sygedage': sygedage,
+                        'Ekstra_Hverdag': ekstra_hverdag, 'Ekstra_Lørdag': ekstra_lørdag,
+                        'Ekstra_Søndag': ekstra_søndag, 'Ekstra_Andet': ekstra_andet,
+                        'Antal_timer': antal_timer, 'Token': generate_token()
+                    }])
+                    new_df = pd.concat([df, new_row], ignore_index=True)
+                    with st.spinner("Opretter medarbejder..."):
+                        success = save_employees(new_df)
+                    if success:
+                        st.session_state['_form_id'] = form_id + 1
+                        st.session_state['_toast'] = f"✅ {name} er tilføjet!"
+                        st.rerun()
 
     with tab3:
         st.subheader("Indsendelser")
