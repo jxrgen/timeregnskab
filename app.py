@@ -1202,7 +1202,13 @@ def admin_interface():
         smtp_port     = st.number_input("SMTP Port",            value=int(config.get('smtp_port', 587)), min_value=1, max_value=65535)
         smtp_username = st.text_input("SMTP Brugernavn (email)", value=config.get('smtp_username', ''))
     with col2:
-        smtp_password = st.text_input("SMTP Password", value=config.get('smtp_password', ''), type="password")
+        has_pw = bool(config.get('smtp_password'))
+        smtp_password = st.text_input(
+            "SMTP Password",
+            value="",
+            type="password",
+            placeholder="(uændret — udfyld kun for at skifte)" if has_pw else "Skriv password",
+        )
         admin_email   = st.text_input("Admin Email (modtager)", value=config.get('admin_email', ''))
         app_url_input = st.text_input("App URL", value=config.get('app_url', ''),
                                       placeholder="https://din-app.streamlit.app",
@@ -1213,7 +1219,8 @@ def admin_interface():
             config['smtp_server']   = smtp_server
             config['smtp_port']     = smtp_port
             config['smtp_username'] = smtp_username
-            config['smtp_password'] = smtp_password
+            if smtp_password:  # Bevar eksisterende password hvis feltet er tomt
+                config['smtp_password'] = smtp_password
             config['admin_email']   = admin_email
             config['app_url']       = app_url_input.rstrip('/')
             with st.spinner("Gemmer SMTP-indstillinger..."):
