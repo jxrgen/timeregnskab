@@ -869,12 +869,18 @@ def send_email_smtp(to_email, subject, body, config):
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
     if smtp_port == 465:
         server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        server.ehlo()
     else:
         server = smtplib.SMTP(smtp_server, smtp_port)
+        server.ehlo()
         server.starttls()
+        server.ehlo()  # Kræves af mange servere efter STARTTLS for korrekt AUTH
     server.login(smtp_username, smtp_password)
     server.send_message(msg)
-    server.quit()
+    try:
+        server.quit()
+    except Exception:
+        pass
 
 
 def collect_period_data(df, period_key):
