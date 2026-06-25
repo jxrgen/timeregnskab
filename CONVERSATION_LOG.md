@@ -258,3 +258,61 @@ Hvis den nye implementering ikke virker, kan du rulle tilbage ved at kopiere fil
 - Alle ændringer er pushet til GitHub
 - Logfilen (CONVERSATION_LOG.md) ligger lokalt i mappen
 - Shutdown instruks tilføjet AGENTS.md (gem log + push ved "farvel")
+
+---
+
+## Session 25. juni 2026 — Større redesign og nye funktioner
+
+### Hvad der blev lavet
+
+#### 1. Faste datoer og ny periode-logik
+- Fjernet konfigurerbare datoer — datoerne er nu faste konstanter i koden:
+  - `REMINDER_DAY = 18` (påmindelsesmail til alle medarbejdere)
+  - `DEADLINE_DAY = 20` (indberetningsfrist)
+  - `AGGREGATE_DAY = 21` (opsamling til admin + ny periode starter)
+- Registreringsperiode følger 21.–20.-modellen via `get_current_period()`
+- Medarbejderformular viser nu én periode ad gangen (fjernet gammel to-kolonne layout)
+
+#### 2. Apple-inspireret design
+- CSS injiceret via `inject_css()`: Apple-blå knapper (#0071e3), pill-radius, lys grå baggrund (#f5f5f7)
+- `config.toml` opdateret med Apple-farver
+- Inputfelter med blå fokus-ring, runde tabs og expanders
+
+#### 3. Medarbejderformular
+- Infobox øverst med periode, frist, påmindelsesdato og konsekvens ved manglende indberetning
+- "Indberet"-sektionen er nu et afsnit (ikke en rød knap)
+- Checkbox: "Marker her for at indberette" (fjernet sjov tekst)
+- Knap: "Gem" → "Indsend"
+- Sammenfoldelig vejledning tilføjet
+
+#### 4. Admin-interface
+- Styled infobox øverst med systemoversigt
+- Ny "Simuler"-fane: send admin-mail manuelt uanset dato
+- Admin-mail er nu én samlet tabel (ikke individuelle mails)
+- `scripts/send_reminders.py`: sender til ALLE aktive medarbejdere d. 18 (ikke kun dem der mangler)
+- `scripts/aggregate_data.py`: sender én samlet tabel-email til admin d. 21
+
+#### 5. Detaljerede HTML-vejledninger
+- Admin: nyt faneblad "Vejledning" med månedlig tidslinje, trin-for-trin guides, felttabel, SMTP-guide
+- Medarbejder: sammenfoldelig vejledning med datooversigt og feltforklaringer
+
+#### 6. Keep-alive workflow
+- `.github/workflows/keep_alive.yml`: Playwright headless browser pinger appen kl. 07:00 og 19:00 UTC
+- Forhindrer Streamlit Cloud i at sætte appen i dvale (7-dages grænse)
+
+#### 7. Rettelser i denne session (25. juni 2026)
+- Guide-tekst: "D. 1–17 Løbende registrering" rettet til "D. 21 ↗ Perioden åbner" — reflekterer korrekt at perioden starter d. 21 i forrige måned
+- Admin login: bruger nu `st.session_state['admin_ok']` så login ikke mistes ved `st.rerun()`
+- Slet-knap: tilføjet `st.spinner("Sletter...")` og fjernet overflødigt success-banner, så knappen ikke hænger visuelt
+
+### Ændrede filer (25. juni 2026)
+- `app.py` — alle ovenstående ændringer
+- `scripts/send_reminders.py` — faste datoer, sender til alle
+- `scripts/aggregate_data.py` — faste datoer, én tabel-email
+- `.streamlit/config.toml` — Apple-farver
+- `.github/workflows/keep_alive.yml` — ny fil, Playwright ping
+- `CLAUDE.md` — ny fil, codebase-dokumentation til fremtidige sessioner
+
+### Status
+- ✅ Alt pushet til GitHub (seneste commit se `git log`)
+- Systemet er færdigt og i produktion på Streamlit Cloud

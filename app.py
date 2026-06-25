@@ -317,12 +317,12 @@ code {{
 <!-- MÅNEDLIG CYKLUS -->
 <div class="ag-section">
   <h2>📅 Månedlig cyklus</h2>
-  <p>Registreringsperioden løber altid fra <strong>d. 21 i én måned til d. 20 i den næste</strong>. Herunder ses hvad der sker automatisk:</p>
+  <p>Registreringsperioden løber fra <strong>d. 21 i én måned til d. 20 i den næste</strong> — den strækker sig altså hen over to kalendermåneder. Herunder ses hvad der sker i løbet af én periode:</p>
   <div class="ag-timeline">
     <div class="ag-titem">
-      <div class="ag-tdate">D. 1–17</div>
-      <div class="ag-ttitle">Løbende registrering</div>
-      <div class="ag-tdesc">Medarbejdere udfylder og gemmer deres registrering via deres personlige link. De kan rette og gemme igen til enhver tid inden fristen.</div>
+      <div class="ag-tdate">D. 21 ↗</div>
+      <div class="ag-ttitle">Perioden åbner</div>
+      <div class="ag-tdesc">Fra d. 21 i forrige måned kan medarbejderne begynde at registrere. De kan løbende udfylde, gemme og rette — helt frem til fristen d. {DEADLINE_DAY}. i næste måned.</div>
     </div>
     <div class="ag-titem reminder">
       <div class="ag-tdate">D. {REMINDER_DAY}.</div>
@@ -882,10 +882,13 @@ def collect_period_data(df, period_key):
 def admin_interface():
     st.title("Timeregnskab — Admin")
 
-    admin_password = st.secrets.get("ADMIN_PASSWORD", "admin123")
-    password = st.text_input("Adgangskode", type="password")
-    if password != admin_password:
-        if password:
+    if not st.session_state.get('admin_ok', False):
+        admin_password = st.secrets.get("ADMIN_PASSWORD", "admin123")
+        password = st.text_input("Adgangskode", type="password")
+        if password == admin_password:
+            st.session_state['admin_ok'] = True
+            st.rerun()
+        elif password:
             st.error("Forkert adgangskode")
         return
 
@@ -960,10 +963,13 @@ def admin_interface():
                             st.rerun()
                 with col3:
                     if st.button("Slet", key=f"delete_{idx}"):
-                        df = df.drop(idx).reset_index(drop=True)
-                        if save_employees(df):
-                            st.success("Slettet!")
+                        new_df = df.drop(idx).reset_index(drop=True)
+                        with st.spinner("Sletter..."):
+                            success = save_employees(new_df)
+                        if success:
                             st.rerun()
+                        else:
+                            st.error("Kunne ikke slette")
 
                 token = row['Token']
                 app_url = st.secrets.get("APP_URL", "https://your-app.streamlit.app")
