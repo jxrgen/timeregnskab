@@ -316,3 +316,48 @@ Hvis den nye implementering ikke virker, kan du rulle tilbage ved at kopiere fil
 ### Status
 - ✅ Alt pushet til GitHub (seneste commit se `git log`)
 - Systemet er færdigt og i produktion på Streamlit Cloud
+
+---
+
+## Session 25. juni 2026 (fortsættelse) — Performance og UX-rettelser
+
+### Problemer der blev løst
+
+#### 1. Greying out / træg UI
+- **Årsag**: `load_employees()` og `load_config()` lavede GitHub API-kald ved **hvert** eneste rerender
+- **Løsning**: GitHub-klient, medarbejderliste og config caches nu i `st.session_state`
+  - Første sideload henter fra GitHub (langsomt)
+  - Alle efterfølgende reruns bruger cache (næsten øjeblikkeligt)
+  - Efter `save_employees()` / `save_config()` opdateres cachen direkte — ingen re-fetch nødvendigt
+- `get_github_client()` cacher også `Github()`-objektet i session state
+
+#### 2. Slet hænger
+- Knap viser `st.spinner("Sletter...")` under GitHub API-kaldet
+- Rerun efter sletning er nu hurtig (bruger cache)
+- Viser `st.toast()` bekræftelse i hjørnet efter handling
+
+#### 3. Formular ryddes ikke efter "Tilføj ny"
+- Løst med dynamisk form-key (`new_employee_0`, `new_employee_1` osv.)
+- `st.session_state['_form_id']` tælles op ved succesfuld oprettelse → Streamlit opretter frisk tom formular
+
+#### 4. Bekræftelsesnotifikationer
+- Alle muterende handlinger (gem, slet, ny token, tilføj medarbejder, gem SMTP) viser nu `st.toast()` i hjørnet
+- Toast-besked sættes i `st.session_state['_toast']` og vises efter rerun
+
+#### 5. Emailvalidering
+- `is_valid_email()` med regex `r'^[^@\s]+@[^@\s]+\.[^@\s]+$'`
+- Valideres i "Tilføj ny"-formularen og ved gem af eksisterende medarbejder
+- Fejlbesked: "Ugyldig emailadresse — tjek formatet (fx navn@firma.dk)"
+
+#### 6. Slettebekræftelse
+- "Slet"-knap viser nu en advarsel med spørgsmål og **Ja** / **Nej** knapper
+- To-trins flow via `st.session_state['_confirm_delete']`
+- Knaplabels rettet fra "Ja, slet"/"Annuller" til "Ja"/"Nej" på brugerens ønske
+
+### Ændrede filer
+- `app.py` — alle ovenstående ændringer
+
+### Commits
+- `752a485` — Ret træg UI: cache data i session state, toast-bekræftelser, ryd formular
+- `56c646b` — Emailvalidering og slettebekræftelse
+- `53783a4` — Ret slettebekræftelse: 'Ja'/'Nej' i stedet for 'Ja, slet'/'Annuller'
