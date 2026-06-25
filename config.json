@@ -4,7 +4,7 @@
   "smtp_server": "send.one.com",
   "smtp_port": 465,
   "smtp_username": "timereg@vimby.dk",
-  "smtp_password": "1lnrmxpfltl",
+  "smtp_password": "1lnrmxpfltl!",
   "admin_email": "digitalt@vimby.dk",
   "app_url": "https://timeregnskab.streamlit.app"
 }
