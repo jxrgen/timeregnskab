@@ -2,7 +2,7 @@ name: Keep App Alive
 
 on:
   schedule:
-    # Kører to gange i døgnet (kl. 07:00 og 19:00 UTC) for at holde appen vågen.
+    # Kører to gange i døgnet (kl. 07:00 og 19:00 UTC).
     # Streamlit sætter apps i dvale efter 7 dages inaktivitet.
     - cron: '0 7,19 * * *'
   workflow_dispatch:
@@ -11,19 +11,41 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Streamlit app
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Playwright
         run: |
-          URL="${{ secrets.APP_URL }}"
-          if [ -z "$URL" ]; then
-            echo "APP_URL er ikke konfigureret som GitHub Secret — springer over."
-            exit 0
-          fi
-          echo "Pinger: $URL"
-          HTTP_CODE=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 30 "$URL")
-          echo "HTTP svar: $HTTP_CODE"
-          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
-            echo "App svarer normalt."
-          else
-            echo "Advarsel: uventet HTTP-kode $HTTP_CODE"
-            exit 1
-          fi
+          pip install playwright
+          playwright install chromium --with-deps
+
+      - name: Besøg app med headless browser
+        run: |
+          python - <<'EOF'
+          import os
+          import sys
+          from playwright.sync_api import sync_playwright
+
+          url = os.environ.get("APP_URL", "").strip().rstrip("/")
+          if not url:
+              print("APP_URL er ikke konfigureret — springer over.")
+              sys.exit(0)
+
+          print(f"Besøger: {url}")
+          with sync_playwright() as p:
+              browser = p.chromium.launch()
+              page = browser.new_page()
+
+              # Vent op til 60 sek på at siden er loaded (inkl. wake-up fra dvale)
+              response = page.goto(url, timeout=60000, wait_until="networkidle")
+              status = response.status if response else "ukendt"
+              print(f"HTTP status: {status}")
+              print(f"Side-titel: {page.title()}")
+              browser.close()
+
+          print("Ping gennemført.")
+          EOF
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
