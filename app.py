@@ -1061,6 +1061,10 @@ def admin_interface():
         selected_idx   = st.selectbox("Vælg periode", range(len(month_labels)),
                                        format_func=lambda i: month_labels[i])
         month = months_options[selected_idx]
+        col_refresh, _ = st.columns([1, 4])
+        with col_refresh:
+            if st.button("🔄 Opdater", key="refresh_submissions", help="Hent seneste status fra GitHub"):
+                st.rerun()
         for _, row in df.iterrows():
             if row['Active']:
                 submission = load_submission(row['Name'], month)
@@ -1246,10 +1250,24 @@ def employee_form():
     already_submitted = existing.get('udfyldt', False) if existing else False
 
     st.title("Timeregnskab")
-    st.markdown(
-        f"<h2 style='margin-top:-0.5rem;font-weight:500;color:#6e6e73;font-size:1.2rem;'>{emp['Name']}</h2>",
-        unsafe_allow_html=True
-    )
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, #e8f4fd 0%, #dceefb 100%);
+        border: 1.5px solid #b3d7f5;
+        border-radius: 14px;
+        padding: 16px 22px;
+        margin: 0 0 18px 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    ">
+        <span style="font-size:28px;line-height:1;">👤</span>
+        <div>
+            <div style="font-size:11px;font-weight:600;color:#0071e3;text-transform:uppercase;letter-spacing:0.5px;">Logget ind som</div>
+            <div style="font-size:20px;font-weight:700;color:#1d1d1f;margin-top:2px;">{emp['Name']}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # Info card
     st.markdown(f"""
