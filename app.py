@@ -1172,27 +1172,28 @@ def admin_interface():
             admin_email = config.get('admin_email', '')
             missing = [k for k in ('smtp_server', 'smtp_username', 'smtp_password') if not config.get(k)]
             if not admin_email:
-                st.error("Admin email ikke konfigureret — sæt den under SMTP-indstillinger nedenfor.")
+                st.error("❌ Admin email ikke konfigureret — sæt den under SMTP-indstillinger nedenfor.")
             elif missing:
-                st.error(f"SMTP-indstillinger mangler: {', '.join(missing)}")
+                st.error(f"❌ Disse SMTP-felter er ikke gemt: **{', '.join(missing)}** — udfyld og gem dem nedenfor.")
             else:
-                with st.spinner("Indsamler data og sender email..."):
+                with st.spinner("Indsamler data..."):
                     summary_df = collect_period_data(df, period_key)
                     submitted_count = (summary_df['Indberettet'] == 'Ja').sum()
                     total_count = len(summary_df)
-                    st.write("**Forhåndsvisning:**")
-                    st.dataframe(summary_df)
-                    subject = f"Timeregnskab – {period_label}"
-                    body = (
-                        f"Timeregnskab\nPeriode: {period_label}\n\n"
-                        f"Indberettet: {submitted_count} ud af {total_count} medarbejdere\n\n"
-                        f"{summary_df.to_string(index=False)}"
-                    )
-                    try:
+                subject = f"Timeregnskab – {period_label}"
+                body = (
+                    f"Timeregnskab\nPeriode: {period_label}\n\n"
+                    f"Indberettet: {submitted_count} ud af {total_count} medarbejdere\n\n"
+                    f"{summary_df.to_string(index=False)}"
+                )
+                st.write("**Forhåndsvisning:**")
+                st.dataframe(summary_df)
+                try:
+                    with st.spinner(f"Sender til {admin_email}..."):
                         send_email_smtp(admin_email, subject, body, config)
-                        st.success(f"✅ Opsummering sendt til {admin_email}!")
-                    except Exception as e:
-                        st.error(f"❌ Emailfejl: {str(e)}")
+                    st.success(f"✅ Opsummering sendt til {admin_email}!")
+                except Exception as e:
+                    st.error(f"❌ Emailfejl: {str(e)}")
 
     with tab7:
         st.markdown(get_admin_guide_html(), unsafe_allow_html=True)
@@ -1201,7 +1202,10 @@ def admin_interface():
 
     config = load_config()
     st.subheader("SMTP Email-indstillinger")
-    st.info("Disse indstillinger bruges til at sende påmindelser og notifikationer.")
+    if not config.get('smtp_password'):
+        st.warning("⚠️ SMTP password er ikke gemt. Udfyld feltet nedenfor og klik 'Gem SMTP-indstillinger'.")
+    else:
+        st.info("Disse indstillinger bruges til at sende påmindelser og notifikationer.")
     col1, col2 = st.columns(2)
     with col1:
         smtp_server   = st.text_input("SMTP Server",            value=config.get('smtp_server', 'smtp.gmail.com'))
@@ -1236,16 +1240,21 @@ def admin_interface():
                 st.rerun()
     with col2:
         if st.button("Send test-email"):
-            try:
-                send_email_smtp(
-                    admin_email, "Test email fra Timeregnskab",
-                    "Dette er en test email for at verificere SMTP-indstillingerne.",
-                    {'smtp_server': smtp_server, 'smtp_port': smtp_port,
-                     'smtp_username': smtp_username, 'smtp_password': smtp_password}
-                )
-                st.success("✅ Test-email sendt!")
-            except Exception as e:
-                st.error(f"❌ Fejl: {str(e)}")
+            # Brug det gemte password hvis formularfeltet er tomt
+            effective_pw = smtp_password or config.get('smtp_password', '')
+            if not effective_pw:
+                st.error("❌ SMTP password er ikke gemt — udfyld og gem det under 'Gem SMTP-indstillinger' først.")
+            else:
+                try:
+                    send_email_smtp(
+                        admin_email, "Test email fra Timeregnskab",
+                        "Dette er en test email for at verificere SMTP-indstillingerne.",
+                        {'smtp_server': smtp_server, 'smtp_port': smtp_port,
+                         'smtp_username': smtp_username, 'smtp_password': effective_pw}
+                    )
+                    st.success("✅ Test-email sendt!")
+                except Exception as e:
+                    st.error(f"❌ Fejl: {str(e)}")
 
 
 # ─────────────────────────────────────────────────────
