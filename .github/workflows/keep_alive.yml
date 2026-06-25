@@ -1,0 +1,29 @@
+name: Keep App Alive
+
+on:
+  schedule:
+    # Kører to gange i døgnet (kl. 07:00 og 19:00 UTC) for at holde appen vågen.
+    # Streamlit sætter apps i dvale efter 7 dages inaktivitet.
+    - cron: '0 7,19 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit app
+        run: |
+          URL="${{ secrets.APP_URL }}"
+          if [ -z "$URL" ]; then
+            echo "APP_URL er ikke konfigureret som GitHub Secret — springer over."
+            exit 0
+          fi
+          echo "Pinger: $URL"
+          HTTP_CODE=$(curl -sL -o /dev/null -w "%{http_code}" --max-time 30 "$URL")
+          echo "HTTP svar: $HTTP_CODE"
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
+            echo "App svarer normalt."
+          else
+            echo "Advarsel: uventet HTTP-kode $HTTP_CODE"
+            exit 1
+          fi
