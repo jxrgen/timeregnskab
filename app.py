@@ -1035,96 +1035,97 @@ def admin_interface():
         st.subheader("Eksisterende medarbejdere")
         for idx, row in df.iterrows():
             emp_key = row['Name'].replace(' ', '_').lower()
-            with st.expander(f"{row['Name']} ({row['Email']})"):
-                col1, col2 = st.columns(2)
-                with col1:
-                    new_name   = st.text_input("Navn",  value=row['Name'],  key=f"name_{emp_key}")
-                    new_email  = st.text_input("Email", value=row['Email'], key=f"email_{emp_key}")
-                    new_active = st.checkbox("Aktiv",   value=row['Active'], key=f"active_{emp_key}")
-                with col2:
-                    st.write("**Skema type:**")
-                    feriedage     = st.checkbox("Feriedage",    value=row['Feriedage'],    key=f"feriedage_{emp_key}")
-                    feriefridag   = st.checkbox("Feriefridag",  value=row['Feriefridag'],  key=f"feriefridag_{emp_key}")
-                    sygedage      = st.checkbox("Sygedage",     value=row['Sygedage'],     key=f"sygedage_{emp_key}")
-                    ekstra_hverdag = st.checkbox("Ekstra Hverdag", value=row['Ekstra_Hverdag'], key=f"hverdag_{emp_key}")
-                    ekstra_lørdag  = st.checkbox("Ekstra Lørdag",  value=row['Ekstra_Lørdag'],  key=f"lørdag_{emp_key}")
-                    ekstra_søndag  = st.checkbox("Ekstra Søndag",  value=row['Ekstra_Søndag'],  key=f"søndag_{emp_key}")
-                    ekstra_andet   = st.checkbox("Ekstra Andet",   value=row['Ekstra_Andet'],   key=f"andet_{emp_key}")
-                    antal_timer    = st.checkbox("Antal timer",    value=row['Antal_timer'],    key=f"timer_{emp_key}")
+            rcol1, rcol2 = st.columns([0.5, 10])
+            with rcol1:
+                if idx > 0:
+                    if st.button("↑", key=f"up_{emp_key}", help="Flyt op"):
+                        updated = df.copy()
+                        cur_order = updated.at[idx, 'Order']
+                        prev_order = updated.at[idx - 1, 'Order']
+                        updated.at[idx, 'Order'] = prev_order
+                        updated.at[idx - 1, 'Order'] = cur_order
+                        save_employees(updated)
+                        st.rerun()
+                else:
+                    st.write("")
+                if idx < len(df) - 1:
+                    if st.button("↓", key=f"down_{emp_key}", help="Flyt ned"):
+                        updated = df.copy()
+                        cur_order = updated.at[idx, 'Order']
+                        next_order = updated.at[idx + 1, 'Order']
+                        updated.at[idx, 'Order'] = next_order
+                        updated.at[idx + 1, 'Order'] = cur_order
+                        save_employees(updated)
+                        st.rerun()
+            with rcol2:
+                with st.expander(f"{row['Name']} ({row['Email']})"):
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        new_name   = st.text_input("Navn",  value=row['Name'],  key=f"name_{emp_key}")
+                        new_email  = st.text_input("Email", value=row['Email'], key=f"email_{emp_key}")
+                        new_active = st.checkbox("Aktiv",   value=row['Active'], key=f"active_{emp_key}")
+                    with col2:
+                        st.write("**Skema type:**")
+                        feriedage     = st.checkbox("Feriedage",    value=row['Feriedage'],    key=f"feriedage_{emp_key}")
+                        feriefridag   = st.checkbox("Feriefridag",  value=row['Feriefridag'],  key=f"feriefridag_{emp_key}")
+                        sygedage      = st.checkbox("Sygedage",     value=row['Sygedage'],     key=f"sygedage_{emp_key}")
+                        ekstra_hverdag = st.checkbox("Ekstra Hverdag", value=row['Ekstra_Hverdag'], key=f"hverdag_{emp_key}")
+                        ekstra_lørdag  = st.checkbox("Ekstra Lørdag",  value=row['Ekstra_Lørdag'],  key=f"lørdag_{emp_key}")
+                        ekstra_søndag  = st.checkbox("Ekstra Søndag",  value=row['Ekstra_Søndag'],  key=f"søndag_{emp_key}")
+                        ekstra_andet   = st.checkbox("Ekstra Andet",   value=row['Ekstra_Andet'],   key=f"andet_{emp_key}")
+                        antal_timer    = st.checkbox("Antal timer",    value=row['Antal_timer'],    key=f"timer_{emp_key}")
 
-                action_cols = st.columns(5)
-                with action_cols[0]:
-                    if st.button("Gem", key=f"save_{emp_key}", type="primary"):
-                        if not is_valid_email(new_email):
-                            st.error("Ugyldig emailadresse")
-                        else:
-                            updated = df.copy()
-                            mask = updated['Name'] == row['Name']
-                            updated.loc[mask, 'Name'] = new_name
-                            updated.loc[mask, 'Email'] = new_email
-                            updated.loc[mask, 'Active'] = new_active
-                            updated.loc[mask, 'Feriedage'] = feriedage
-                            updated.loc[mask, 'Feriefridag'] = feriefridag
-                            updated.loc[mask, 'Sygedage'] = sygedage
-                            updated.loc[mask, 'Ekstra_Hverdag'] = ekstra_hverdag
-                            updated.loc[mask, 'Ekstra_Lørdag'] = ekstra_lørdag
-                            updated.loc[mask, 'Ekstra_Søndag'] = ekstra_søndag
-                            updated.loc[mask, 'Ekstra_Andet'] = ekstra_andet
-                            updated.loc[mask, 'Antal_timer'] = antal_timer
-                            with st.spinner("Gemmer..."):
-                                success = save_employees(updated)
-                            if success:
-                                st.session_state['_toast'] = f"✅ {new_name} gemt"
+                    action_cols = st.columns(3)
+                    with action_cols[0]:
+                        if st.button("Gem", key=f"save_{emp_key}", type="primary"):
+                            if not is_valid_email(new_email):
+                                st.error("Ugyldig emailadresse")
+                            else:
+                                updated = df.copy()
+                                mask = updated['Name'] == row['Name']
+                                updated.loc[mask, 'Name'] = new_name
+                                updated.loc[mask, 'Email'] = new_email
+                                updated.loc[mask, 'Active'] = new_active
+                                updated.loc[mask, 'Feriedage'] = feriedage
+                                updated.loc[mask, 'Feriefridag'] = feriefridag
+                                updated.loc[mask, 'Sygedage'] = sygedage
+                                updated.loc[mask, 'Ekstra_Hverdag'] = ekstra_hverdag
+                                updated.loc[mask, 'Ekstra_Lørdag'] = ekstra_lørdag
+                                updated.loc[mask, 'Ekstra_Søndag'] = ekstra_søndag
+                                updated.loc[mask, 'Ekstra_Andet'] = ekstra_andet
+                                updated.loc[mask, 'Antal_timer'] = antal_timer
+                                with st.spinner("Gemmer..."):
+                                    success = save_employees(updated)
+                                if success:
+                                    st.session_state['_toast'] = f"✅ {new_name} gemt"
+                                    st.rerun()
+                    with action_cols[1]:
+                        if st.button("Ny token", key=f"token_{emp_key}", type="secondary"):
+                            st.session_state['_confirm_token'] = emp_key
+                            st.rerun()
+                    with action_cols[2]:
+                        if st.button("Slet", key=f"delete_{emp_key}", type="secondary"):
+                            st.session_state['_confirm_delete'] = emp_key
+                            st.rerun()
+
+                    if st.session_state.get('_confirm_token') == emp_key:
+                        st.warning(f"Er du sikker? **{row['Name']}s** nuværende link holder op med at virke med det samme. Husk at sende det nye link til medarbejderen.")
+                        cy, cn = st.columns(2)
+                        with cy:
+                            if st.button("Ja", key=f"confirm_token_yes_{emp_key}"):
+                                updated = df.copy()
+                                mask = updated['Name'] == row['Name']
+                                updated.loc[mask, 'Token'] = generate_token()
+                                with st.spinner("Genererer nyt link..."):
+                                    success = save_employees(updated)
+                                st.session_state.pop('_confirm_token', None)
+                                if success:
+                                    st.session_state['_toast'] = f"✅ Nyt link genereret til {row['Name']} — husk at sende det!"
                                 st.rerun()
-                with action_cols[1]:
-                    if st.button("Ny token", key=f"token_{emp_key}", type="secondary"):
-                        st.session_state['_confirm_token'] = emp_key
-                        st.rerun()
-                with action_cols[2]:
-                    if st.button("Slet", key=f"delete_{emp_key}", type="secondary"):
-                        st.session_state['_confirm_delete'] = emp_key
-                        st.rerun()
-                with action_cols[3]:
-                    if idx > 0:
-                        if st.button("↑", key=f"up_{emp_key}", help="Flyt op"):
-                            updated = df.copy()
-                            cur_order = updated.at[idx, 'Order']
-                            prev_order = updated.at[idx - 1, 'Order']
-                            updated.at[idx, 'Order'] = prev_order
-                            updated.at[idx - 1, 'Order'] = cur_order
-                            with st.spinner("Flytter..."):
-                                save_employees(updated)
-                            st.rerun()
-                with action_cols[4]:
-                    if idx < len(df) - 1:
-                        if st.button("↓", key=f"down_{emp_key}", help="Flyt ned"):
-                            updated = df.copy()
-                            cur_order = updated.at[idx, 'Order']
-                            next_order = updated.at[idx + 1, 'Order']
-                            updated.at[idx, 'Order'] = next_order
-                            updated.at[idx + 1, 'Order'] = cur_order
-                            with st.spinner("Flytter..."):
-                                save_employees(updated)
-                            st.rerun()
-
-                if st.session_state.get('_confirm_token') == emp_key:
-                    st.warning(f"Er du sikker? **{row['Name']}s** nuværende link holder op med at virke med det samme. Husk at sende det nye link til medarbejderen.")
-                    cy, cn = st.columns(2)
-                    with cy:
-                        if st.button("Ja", key=f"confirm_token_yes_{emp_key}"):
-                            updated = df.copy()
-                            mask = updated['Name'] == row['Name']
-                            updated.loc[mask, 'Token'] = generate_token()
-                            with st.spinner("Genererer nyt link..."):
-                                success = save_employees(updated)
-                            st.session_state.pop('_confirm_token', None)
-                            if success:
-                                st.session_state['_toast'] = f"✅ Nyt link genereret til {row['Name']} — husk at sende det!"
-                            st.rerun()
-                    with cn:
-                        if st.button("Nej", key=f"confirm_token_no_{emp_key}"):
-                            st.session_state.pop('_confirm_token', None)
-                            st.rerun()
+                        with cn:
+                            if st.button("Nej", key=f"confirm_token_no_{emp_key}"):
+                                st.session_state.pop('_confirm_token', None)
+                                st.rerun()
 
                 if st.session_state.get('_confirm_delete') == emp_key:
                     st.warning(f"Er du sikker på, at du vil slette **{row['Name']}**? Dette kan ikke fortrydes.")
