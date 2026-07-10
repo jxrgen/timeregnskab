@@ -2,7 +2,7 @@
   "feriedage": 1,
   "feriefridag": 0,
   "sygedage": 2,
-  "udfyldt": true,
+  "udfyldt": false,
   "timestamp": "2026-06-25T10:04:41.487706",
   "employee": "Gitte Friis",
   "month": "2026-07"
