@@ -1238,40 +1238,38 @@ def admin_interface():
 
         active_employees = df[df['Active']].sort_values('Order')
         if len(active_employees) > 0:
-            cols_per_row = min(len(active_employees), 5)
-            rows_needed = (len(active_employees) + cols_per_row - 1) // cols_per_row
-            for r in range(rows_needed):
-                cols = st.columns(cols_per_row)
-                for c in range(cols_per_row):
-                    i = r * cols_per_row + c
-                    if i >= len(active_employees):
-                        break
-                    emp = active_employees.iloc[i]
-                    submission = load_submission(emp['Name'], month)
-                    is_submitted = submission and submission.get('udfyldt', False)
-                    if is_submitted:
-                        icon = "✅"
-                        label = "Indberettet"
-                        border_color = "#34c759"
-                        bg_color = "#f0faf4"
-                    else:
-                        icon = "❌"
-                        label = "Mangler"
-                        border_color = "#ff3b30"
-                        bg_color = "#fff2f2"
-                    with cols[c]:
-                        st.markdown(f"""
-                        <div style="
-                            border:2px solid {border_color};border-radius:12px;
-                            background:{bg_color};padding:16px 12px;text-align:center;
-                            margin-bottom:8px;min-height:80px;
-                            display:flex;flex-direction:column;align-items:center;justify-content:center;
-                        ">
-                            <div style="font-size:28px;margin-bottom:4px;">{icon}</div>
-                            <div style="font-size:13px;font-weight:600;color:#1d1d1f;">{label}</div>
-                            <div style="font-size:12px;color:#6e6e73;margin-top:6px;">{emp['Name']}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
+            rows_html = ''
+            for _, emp in active_employees.iterrows():
+                submission = load_submission(emp['Name'], month)
+                is_submitted = submission and submission.get('udfyldt', False)
+                if is_submitted:
+                    icon = "✅"
+                    label = "Indberettet"
+                    label_color = "#2e7d32"
+                    bg = "#f0faf4"
+                else:
+                    icon = "❌"
+                    label = "Mangler"
+                    label_color = "#c62828"
+                    bg = "#fff2f2"
+                rows_html += f'''
+                <tr style="background:{bg};border-bottom:1px solid #e8e8ed;">
+                    <td style="padding:12px 16px;font-weight:600;font-size:14px;color:#1d1d1f;">{emp['Name']}</td>
+                    <td style="padding:12px 16px;text-align:center;font-size:20px;">{icon}</td>
+                    <td style="padding:12px 16px;font-weight:600;font-size:14px;color:{label_color};">{label}</td>
+                </tr>'''
+            st.markdown(f'''
+            <table style="width:100%;border-collapse:collapse;border:1px solid #e8e8ed;border-radius:12px;overflow:hidden;">
+                <thead>
+                    <tr style="background:#f5f5f7;border-bottom:2px solid #e8e8ed;">
+                        <th style="padding:12px 16px;text-align:left;font-size:13px;color:#6e6e73;">Medarbejder</th>
+                        <th style="padding:12px 16px;text-align:center;font-size:13px;color:#6e6e73;">Status</th>
+                        <th style="padding:12px 16px;text-align:left;font-size:13px;color:#6e6e73;">Indberetning</th>
+                    </tr>
+                </thead>
+                <tbody>{rows_html}</tbody>
+            </table>
+            ''', unsafe_allow_html=True)
         else:
             st.info("Ingen aktive medarbejdere")
 
