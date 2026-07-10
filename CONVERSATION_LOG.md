@@ -419,3 +419,22 @@ Hvis den nye implementering ikke virker, kan du rulle tilbage ved at kopiere fil
 - **Performance:** Systemet er 10–15 sek. langsomt pga. GitHub-API-arkitektur. Løsning er migration til Supabase (PostgreSQL). Bruger har valgt at vente med dette.
 - Supabase-plan: beholde Streamlit Cloud, erstatte GitHub-filstorage med Supabase-tabeller (employees, submissions, config). Alle API-kald: 20–100 ms i stedet for 1–3 sek.
 - Husk: App URL skal sættes i admin → SMTP-indstillinger for at påmindelsesmails får komplet link
+
+---
+
+## Session 10. juli 2026 — Gennemgang af vejledninger
+
+### Gennemført
+- Gennemgået begge HTML-vejledninger (admin + medarbejder) linje for linje mod aktuel app.py-kode
+- **Fundet én fejl:** Admin-vejledningens SMTP-tabel manglede "App URL"-feltet (bruges i påmindelsesmails)
+- **Rettet:** Tilføjet App URL-række til SMTP-tabellen i `get_admin_guide_html()`
+- Medarbejdervejledningen var fuldt opdateret — ingen ændringer nødvendige
+- **Commit:** `63cbdf6` — "Admin guide: Tilføjet App URL til SMTP-tabellen"
+
+### Tjekket og verificeret som korrekt
+- Alle 7 admin-faner stemmer overens med vejledningen
+- "Inaktiv" beskrivelse (ingen påmindelser, ikke med i opsamling) matcher koden
+- "Automatisk arkiv" tip matcher `aggregate_data.py`
+- Indsendelser-dropdown viser 3 perioder (nuværende + 2 forrige)
+- Periode-modellen (21.–20.) er konsistent i begge guides
+- SMTP-felter, Simuler, Fælles besked korrekt beskrevet
