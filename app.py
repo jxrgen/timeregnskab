@@ -1106,6 +1106,13 @@ def admin_interface():
                             with st.spinner("Sletter..."):
                                 success = save_employees(new_df)
                             st.session_state.pop('_confirm_delete', None)
+                            st.session_state.pop('_confirm_unsubmit', None)
+                            widget_prefixes = ('name_', 'email_', 'active_', 'feriedage_', 'feriefridag_',
+                                               'sygedage_', 'hverdag_', 'lørdag_', 'søndag_', 'andet_', 'timer_',
+                                               'unsubmit_confirm_')
+                            keys_to_clear = [k for k in st.session_state if any(k.startswith(p) for p in widget_prefixes)]
+                            for k in keys_to_clear:
+                                del st.session_state[k]
                             if success:
                                 st.session_state['_toast'] = f"✅ {row['Name']} er slettet"
                             st.rerun()
@@ -1117,6 +1124,34 @@ def admin_interface():
                 token = row['Token']
                 app_url = st.secrets.get("APP_URL", "https://your-app.streamlit.app")
                 st.code(f"{app_url}/?token={token}")
+
+                period_key, _ = get_current_period()
+                submission = load_submission(row['Name'], period_key)
+                is_submitted = submission.get('udfyldt', False) if submission else False
+                if is_submitted:
+                    st.markdown("---")
+                    if st.checkbox(f"Fjern indberetning for {format_month_danish(period_key)}",
+                                   key=f"unsubmit_{idx}"):
+                        st.session_state['_confirm_unsubmit'] = idx
+                    if st.session_state.get('_confirm_unsubmit') == idx:
+                        st.warning(f"Er du sikker på, at du vil fjerne **{row['Name']}s** indberetning for {format_month_danish(period_key)}?")
+                        cy, cn = st.columns(2)
+                        with cy:
+                            if st.button("Ja, fjern indberetning", key=f"confirm_unsubmit_yes_{idx}"):
+                                if submission:
+                                    submission['udfyldt'] = False
+                                    save_submission(row['Name'], submission, period_key)
+                                st.session_state.pop('_confirm_unsubmit', None)
+                                st.session_state.pop(f'unsubmit_{idx}', None)
+                                st.session_state['_toast'] = f"✅ Indberetning fjernet for {row['Name']}"
+                                st.rerun()
+                        with cn:
+                            if st.button("Annuller", key=f"confirm_unsubmit_no_{idx}"):
+                                st.session_state.pop('_confirm_unsubmit', None)
+                                st.session_state.pop(f'unsubmit_{idx}', None)
+                                st.rerun()
+                else:
+                    st.caption(f"Ingen indberetning for {format_month_danish(period_key)}")
 
     with tab2:
         st.subheader("Tilføj ny medarbejder")
