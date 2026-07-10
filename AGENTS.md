@@ -16,6 +16,7 @@ Streamlit Cloud app for automated time tracking with individual employee access 
 - Code runs on Streamlit Cloud, connected to GitHub repository
 - Data stored as JSON/CSV files in GitHub repo (not a database)
 - User provides GitHub token for repo access
+- ALWAYS commit and push after every change — no exceptions
 
 ## Key behavior
 - Each employee gets a UNIQUE URL with token parameter (`?token=xxx`)
