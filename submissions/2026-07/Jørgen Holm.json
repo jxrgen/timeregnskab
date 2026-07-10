@@ -2,8 +2,8 @@
   "feriedage": 2,
   "feriefridag": 1,
   "sygedage": 2,
-  "udfyldt": false,
-  "timestamp": "2026-07-10T18:40:49.677260",
+  "udfyldt": true,
+  "timestamp": "2026-07-10T19:04:13.782979",
   "employee": "Jørgen Holm",
   "month": "2026-07"
 }
