@@ -512,6 +512,7 @@ code {{
     <tr><td><strong>SMTP Brugernavn</strong></td><td>Din fulde email-adresse</td><td><code>timereg@firma.dk</code></td></tr>
     <tr><td><strong>SMTP Password</strong></td><td>Adgangskoden til emailkontoen</td><td>—</td></tr>
     <tr><td><strong>Admin Email</strong></td><td>Hvem der modtager den månedlige oversigt</td><td><code>admin@firma.dk</code></td></tr>
+    <tr><td><strong>App URL</strong></td><td>Dit Streamlit apps fulde URL (bruges i påmindelsesmails)</td><td><code>https://din-app.streamlit.app</code></td></tr>
   </table>
   <div class="ag-steps">
     <div class="ag-step">
