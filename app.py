@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import os
 from github import Github
@@ -1479,8 +1480,26 @@ def employee_form():
 # Entry point
 # ─────────────────────────────────────────────────────
 
+def keep_alive():
+    components.html(
+        """
+        <script>
+            function sendPing() {
+                try {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', window.location.href, true);
+                    xhr.send();
+                } catch(e) {}
+            }
+            setInterval(sendPing, 300000);
+        </script>
+        """,
+        height=0
+    )
+
 def main():
     inject_css()
+    keep_alive()
     if st.query_params.get("admin") == "true":
         admin_interface()
     else:
