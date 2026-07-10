@@ -1,11 +1,11 @@
-Name,Email,Active,Feriedage,Feriefridag,Sygedage,Ekstra_Hverdag,Ekstra_Lørdag,Ekstra_Søndag,Ekstra_Andet,Antal_timer,Token,Order
-Amalie Winther Hansen,amaliewh@hotmail.com,True,True,True,True,False,False,False,False,False,71CD6WeQjOe7ySxJWODPJQ,2
-Benjamin Bjerre Kjærsgaard,sendtilben@gmail.com,True,False,False,False,False,False,False,False,True,ojKfKetVu1TU5LIgVEaG0Q,1
-Gitte Friis,gittefriispedersen@hotmail.com,True,True,True,True,False,False,False,False,False,wvbrTaSOjvV3_l0a7VwLIw,3
-Gitte Simonsen,polimit@hotmail.com,True,True,True,True,False,False,False,False,False,_y9WhaVcbbv395CL44bSZA,4
-Jonas Strunge Christiansen,jona049h@yahoo.com,True,True,True,True,True,True,True,True,False,AwATq3aIjyru2isTU2gpMQ,5
-Jørgen Holm,jxrgen@gmail.com,True,True,True,True,False,False,False,False,False,Z-SLYz2lo2xzpBKxHTDqtw,6
-Kasper sangill Elgaard,kasper.elgaard@gmail.com,True,True,True,True,True,True,True,True,False,eA5Qoqsmec_ssf4YZRDqkA,7
-Lyng Efia Thastum,lyng.efia@gmail.com,True,False,False,False,False,False,False,False,True,MOnc6NUQP052i_P1u40Kww,8
-Mille Rask Steiner,millesteiner@icloud.com,True,False,False,False,False,False,False,False,True,BWV48eFiJ_Dp0jUKaBmVVw,9
-Vitus Rask Steiner,vitusrask@gmail.com,True,False,False,False,False,False,False,False,True,0d3S-Fv6l8ajRqJfC4QxJw,10
+Name,Email,Active,Feriedage,Feriefridag,Sygedage,Ekstra_Hverdag,Ekstra_Lørdag,Ekstra_Søndag,Ekstra_Andet,Antal_timer,Token
+Amalie Winther Hansen,amaliewh@hotmail.com,True,True,True,True,False,False,False,False,False,71CD6WeQjOe7ySxJWODPJQ
+Benjamin Bjerre Kjærsgaard,sendtilben@gmail.com,True,False,False,False,False,False,False,False,True,ojKfKetVu1TU5LIgVEaG0Q
+Gitte Friis,gittefriispedersen@hotmail.com,True,True,True,True,False,False,False,False,False,wvbrTaSOjvV3_l0a7VwLIw
+Gitte Simonsen,polimit@hotmail.com,True,True,True,True,False,False,False,False,False,_y9WhaVcbbv395CL44bSZA
+Jonas Strunge Christiansen,jona049h@yahoo.com,True,True,True,True,True,True,True,True,False,AwATq3aIjyru2isTU2gpMQ
+Jørgen Holm,jxrgen@gmail.com,True,True,True,True,False,False,False,False,False,Z-SLYz2lo2xzpBKxHTDqtw
+Kasper sangill Elgaard,kasper.elgaard@gmail.com,True,True,True,True,True,True,True,True,False,eA5Qoqsmec_ssf4YZRDqkA
+Lyng Efia Thastum,lyng.efia@gmail.com,True,False,False,False,False,False,False,False,True,MOnc6NUQP052i_P1u40Kww
+Mille Rask Steiner,millesteiner@icloud.com,True,False,False,False,False,False,False,False,True,BWV48eFiJ_Dp0jUKaBmVVw
+Vitus Rask Steiner,vitusrask@gmail.com,True,False,False,False,False,False,False,False,True,0d3S-Fv6l8ajRqJfC4QxJw

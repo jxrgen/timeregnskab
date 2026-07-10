@@ -1022,9 +1022,7 @@ def admin_interface():
         st.warning("Kunne ikke indlæse medarbejdere")
         return
 
-    if 'Order' not in df.columns:
-        df['Order'] = range(1, len(df) + 1)
-    df = df.sort_values('Order').reset_index(drop=True)
+    df = df.sort_values('Name').reset_index(drop=True)
 
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "Medarbejdere", "Tilføj ny", "Indsendelser",
@@ -1035,30 +1033,7 @@ def admin_interface():
         st.subheader("Eksisterende medarbejdere")
         for idx, row in df.iterrows():
             emp_key = row['Name'].replace(' ', '_').lower()
-            rcol1, rcol2 = st.columns([0.5, 10])
-            with rcol1:
-                if idx > 0:
-                    if st.button("↑", key=f"up_{emp_key}", help="Flyt op"):
-                        updated = df.copy()
-                        cur_order = updated.at[idx, 'Order']
-                        prev_order = updated.at[idx - 1, 'Order']
-                        updated.at[idx, 'Order'] = prev_order
-                        updated.at[idx - 1, 'Order'] = cur_order
-                        save_employees(updated)
-                        st.rerun()
-                else:
-                    st.write("")
-                if idx < len(df) - 1:
-                    if st.button("↓", key=f"down_{emp_key}", help="Flyt ned"):
-                        updated = df.copy()
-                        cur_order = updated.at[idx, 'Order']
-                        next_order = updated.at[idx + 1, 'Order']
-                        updated.at[idx, 'Order'] = next_order
-                        updated.at[idx + 1, 'Order'] = cur_order
-                        save_employees(updated)
-                        st.rerun()
-            with rcol2:
-                with st.expander(f"{row['Name']} ({row['Email']})"):
+            with st.expander(f"{row['Name']} ({row['Email']})"):
                     col1, col2 = st.columns(2)
                     with col1:
                         new_name   = st.text_input("Navn",  value=row['Name'],  key=f"name_{emp_key}")
@@ -1204,13 +1179,12 @@ def admin_interface():
                 elif not is_valid_email(email):
                     st.error("Ugyldig emailadresse — tjek formatet (fx navn@firma.dk)")
                 else:
-                    new_order = int(df['Order'].max()) + 1 if len(df) > 0 else 1
                     new_row = pd.DataFrame([{
                         'Name': name, 'Email': email, 'Active': True,
                         'Feriedage': feriedage, 'Feriefridag': feriefridag, 'Sygedage': sygedage,
                         'Ekstra_Hverdag': ekstra_hverdag, 'Ekstra_Lørdag': ekstra_lørdag,
                         'Ekstra_Søndag': ekstra_søndag, 'Ekstra_Andet': ekstra_andet,
-                        'Antal_timer': antal_timer, 'Token': generate_token(), 'Order': new_order
+                        'Antal_timer': antal_timer, 'Token': generate_token()
                     }])
                     new_df = pd.concat([df, new_row], ignore_index=True)
                     with st.spinner("Opretter medarbejder..."):
@@ -1237,7 +1211,7 @@ def admin_interface():
             if st.button("🔄 Opdater", key="refresh_submissions", help="Hent seneste status fra GitHub"):
                 st.rerun()
 
-        active_employees = df[df['Active']].sort_values('Order')
+        active_employees = df[df['Active']].sort_values('Name')
         if len(active_employees) > 0:
             rows_html = ''
             for _, emp in active_employees.iterrows():
