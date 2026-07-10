@@ -424,7 +424,7 @@ code {{
   <p>Under fanen <strong>"Indsendelser"</strong> kan du tjekke hvem der har indberettet for en given periode.</p>
   <ul>
     <li>Vælg perioden (de 3 seneste vises) i dropdownmenuen øverst</li>
-    <li><strong style="color: #2e7d32;">✅ Udfyldt</strong> — medarbejderen har sat hak i "Marker her for at indberette" og klikket Indsend</li>
+    <li><strong style="color: #2e7d32;">✅ Indberettet</strong> — medarbejderen har sat hak i "Marker her for at indberette" og klikket Indsend</li>
     <li><strong style="color: #c62828;">❌ Mangler</strong> — ingen indberetning er modtaget, eller medarbejderen har gemt tal men ikke afkrydset og indsendt</li>
   </ul>
   <div class="ag-callout info">
@@ -1133,6 +1133,8 @@ def admin_interface():
                     if st.checkbox(f"Fjern indberetning for {format_month_danish(period_key)}",
                                    key=f"unsubmit_{idx}"):
                         st.session_state['_confirm_unsubmit'] = idx
+                    else:
+                        st.session_state.pop('_confirm_unsubmit', None)
                     if st.session_state.get('_confirm_unsubmit') == idx:
                         st.warning(f"Er du sikker på, at du vil fjerne **{row['Name']}s** indberetning for {format_month_danish(period_key)}?")
                         cy, cn = st.columns(2)
@@ -1199,7 +1201,9 @@ def admin_interface():
         prev_key      = get_previous_month(period_key)
         prev_prev_key = get_previous_month(prev_key)
         months_options = [period_key, prev_key, prev_prev_key]
-        month_labels   = [f"{format_month_danish(m)} (periode slut)" for m in months_options]
+        month_labels   = [f"{format_month_danish(period_key)} (igangværende)",
+                          f"{format_month_danish(prev_key)} (slut)",
+                          f"{format_month_danish(prev_prev_key)} (slut)"]
         selected_idx   = st.selectbox("Vælg periode", range(len(month_labels)),
                                        format_func=lambda i: month_labels[i])
         month = months_options[selected_idx]
@@ -1210,7 +1214,7 @@ def admin_interface():
         for _, row in df.iterrows():
             if row['Active']:
                 submission = load_submission(row['Name'], month)
-                status = "✅ Udfyldt" if submission and submission.get('udfyldt') else "❌ Mangler"
+                status = "✅ Indberettet" if submission and submission.get('udfyldt') else "❌ Mangler"
                 st.write(f"{row['Name']}: {status}")
 
     with tab4:
