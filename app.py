@@ -46,7 +46,6 @@ def app_log(action, detail="", user="system"):
                     existing = existing[-80000:]
                 repo.update_file(LOG_FILE, f"Log: {action}", existing + line, content.sha)
             except Exception:
-                repo.create(LOG_DIR)
                 repo.create_file(LOG_FILE, f"Log: {action}", line)
     except Exception:
         pass
@@ -714,7 +713,7 @@ def get_github_client():
         token = None
         try:
             token = st.secrets["GITHUB_TOKEN"]
-        except:
+        except Exception:
             token = os.getenv("GITHUB_TOKEN")
         if not token:
             st.error("GitHub token ikke konfigureret")
@@ -733,7 +732,14 @@ def load_employees():
                 import base64
                 csv_content = base64.b64decode(content.content).decode('utf-8')
                 from io import StringIO
-                st.session_state['employees_df'] = pd.read_csv(StringIO(csv_content))
+                df = pd.read_csv(StringIO(csv_content))
+                bool_cols = ['Active', 'Feriedage', 'Feriefridag', 'Sygedage',
+                             'Ekstra_Hverdag', 'Ekstra_Lørdag', 'Ekstra_Søndag',
+                             'Ekstra_Andet', 'Antal_timer']
+                for c in bool_cols:
+                    if c in df.columns:
+                        df[c] = df[c].astype(str).str.lower().map({'true': True, 'false': False}).fillna(False)
+                st.session_state['employees_df'] = df
             else:
                 st.error("Ingen GitHub forbindelse")
                 st.session_state['employees_df'] = pd.DataFrame()
@@ -752,7 +758,7 @@ def save_employees(df):
             try:
                 file = repo.get_contents(EMPLOYEES_FILE)
                 repo.update_file(EMPLOYEES_FILE, "Opdateret medarbejdere", content, file.sha)
-            except:
+            except Exception:
                 repo.create_file(EMPLOYEES_FILE, "Oprettet medarbejdere", content)
             st.session_state['employees_df'] = df.reset_index(drop=True)
             return True
@@ -808,7 +814,7 @@ def save_submission(employee_name, data, month):
             try:
                 file = repo.get_contents(file_path)
                 repo.update_file(file_path, f"Opdateret {month}/{employee_name}", content, file.sha)
-            except:
+            except Exception:
                 repo.create_file(file_path, f"Oprettet {month}/{employee_name}", content)
             invalidate_submission_cache(month)
             return True
@@ -835,7 +841,7 @@ def load_config():
                 content = repo.get_contents("config.json")
                 import base64
                 st.session_state['config_data'] = json.loads(base64.b64decode(content.content).decode('utf-8'))
-        except:
+        except Exception:
             pass
         if 'config_data' not in st.session_state:
             st.session_state['config_data'] = {}
@@ -851,7 +857,7 @@ def save_config(config):
             try:
                 file = repo.get_contents("config.json")
                 repo.update_file("config.json", "Opdateret konfiguration", content, file.sha)
-            except:
+            except Exception:
                 repo.create_file("config.json", "Oprettet konfiguration", content)
             st.session_state['config_data'] = config
             return True
@@ -1229,7 +1235,7 @@ def admin_interface():
                 antal_timer    = st.checkbox("Antal timer")
             submitted = st.form_submit_button("Tilføj medarbejder")
             if submitted:
-                if not name or not email:
+                if not name.strip() or not email.strip():
                     st.warning("Udfyld venligst navn og email")
                 elif not is_valid_email(email):
                     st.error("Ugyldig emailadresse — tjek formatet (fx navn@firma.dk)")
@@ -1449,7 +1455,8 @@ def admin_interface():
             if smtp_password:  # Bevar eksisterende password hvis feltet er tomt
                 config['smtp_password'] = smtp_password
             config['admin_email']   = admin_email
-            config['app_url']       = app_url_input.rstrip('/')
+            if app_url_input.strip():
+                config['app_url'] = app_url_input.strip().rstrip('/')
             with st.spinner("Gemmer SMTP-indstillinger..."):
                 success = save_config(config)
             if success:
