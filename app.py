@@ -740,17 +740,39 @@ def save_employees(df):
 
 
 def load_submission(employee_name, month):
+    all_subs = load_all_submissions(month)
+    return all_subs.get(employee_name)
+
+
+def load_all_submissions(month):
+    cache_key = f'submissions_{month}'
+    if cache_key in st.session_state:
+        return st.session_state[cache_key]
+    result = {}
     try:
         g = get_github_client()
         if g:
             repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
-            file_path = f"{SUBMISSIONS_DIR}/{month}/{employee_name}.json"
-            content = repo.get_contents(file_path)
-            import base64
-            return json.loads(base64.b64decode(content.content).decode('utf-8'))
-    except:
+            dir_path = f"{SUBMISSIONS_DIR}/{month}"
+            try:
+                contents = repo.get_contents(dir_path)
+                import base64
+                for item in contents:
+                    if item.name.endswith('.json'):
+                        emp_name = item.name[:-5]
+                        data = json.loads(base64.b64decode(item.content).decode('utf-8'))
+                        result[emp_name] = data
+            except Exception:
+                pass
+    except Exception:
         pass
-    return None
+    st.session_state[cache_key] = result
+    return result
+
+
+def invalidate_submission_cache(month):
+    cache_key = f'submissions_{month}'
+    st.session_state.pop(cache_key, None)
 
 
 def save_submission(employee_name, data, month):
@@ -765,6 +787,7 @@ def save_submission(employee_name, data, month):
                 repo.update_file(file_path, f"Opdateret {month}/{employee_name}", content, file.sha)
             except:
                 repo.create_file(file_path, f"Oprettet {month}/{employee_name}", content)
+            invalidate_submission_cache(month)
             return True
     except Exception as e:
         st.error(f"Kunne ikke gemme: {str(e)}")
