@@ -17,6 +17,8 @@ REPO_OWNER = os.getenv("REPO_OWNER", "jxrgen")
 REPO_NAME = os.getenv("REPO_NAME", "timeregnskab")
 EMPLOYEES_FILE = "employees.csv"
 SUBMISSIONS_DIR = "submissions"
+LOG_DIR = "logs"
+LOG_FILE = "logs/app.log"
 
 REMINDER_DAY = 18
 DEADLINE_DAY = 20
@@ -27,6 +29,27 @@ MONTHS_DA = {
     5: 'Maj', 6: 'Juni', 7: 'Juli', 8: 'August',
     9: 'September', 10: 'Oktober', 11: 'November', 12: 'December'
 }
+
+
+def app_log(action, detail="", user="system"):
+    try:
+        g = get_github_client()
+        if g:
+            repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            line = f"{timestamp} | {user:12s} | {action:30s} | {detail}\n"
+            try:
+                content = repo.get_contents(LOG_FILE)
+                import base64
+                existing = base64.b64decode(content.content).decode('utf-8')
+                if len(existing) > 100000:
+                    existing = existing[-80000:]
+                repo.update_file(LOG_FILE, f"Log: {action}", existing + line, content.sha)
+            except Exception:
+                repo.create(LOG_DIR)
+                repo.create_file(LOG_FILE, f"Log: {action}", line)
+    except Exception:
+        pass
 
 
 # ─────────────────────────────────────────────────────
@@ -1017,9 +1040,11 @@ def admin_interface():
         password = st.text_input("Adgangskode", type="password")
         if password == admin_password:
             st.session_state['admin_ok'] = True
+            app_log("admin_login", "Succesfuld login", "admin")
             st.rerun()
         elif password:
             st.error("Forkert adgangskode")
+            app_log("admin_login_fail", "Forkert adgangskode", "admin")
         return
 
     st.success("Logget ind")
@@ -1099,6 +1124,7 @@ def admin_interface():
                                     success = save_employees(updated)
                                 if success:
                                     st.session_state['_toast'] = f"✅ {new_name} gemt"
+                                    app_log("employee_update", new_name, "admin")
                                     st.rerun()
                     with action_cols[1]:
                         if st.button("Ny token", key=f"token_{emp_key}", type="secondary"):
@@ -1122,6 +1148,7 @@ def admin_interface():
                                 st.session_state.pop('_confirm_token', None)
                                 if success:
                                     st.session_state['_toast'] = f"✅ Nyt link genereret til {row['Name']} — husk at sende det!"
+                                    app_log("token_regenerate", row['Name'], "admin")
                                 st.rerun()
                         with cn:
                             if st.button("Nej", key=f"confirm_token_no_{emp_key}"):
@@ -1140,6 +1167,7 @@ def admin_interface():
                                 st.session_state.pop('_confirm_unsubmit', None)
                                 if success:
                                     st.session_state['_toast'] = f"✅ {row['Name']} er slettet"
+                                    app_log("employee_delete", row['Name'], "admin")
                                 st.rerun()
                         with cn:
                             if st.button("Nej", key=f"confirm_no_{emp_key}"):
@@ -1171,6 +1199,7 @@ def admin_interface():
                                     st.session_state.pop('_confirm_unsubmit', None)
                                     st.session_state.pop(f'unsubmit_{emp_key}', None)
                                     st.session_state['_toast'] = f"✅ Indberetning fjernet for {row['Name']}"
+                                    app_log("unsubmit", row['Name'], "admin")
                                     st.rerun()
                             with cn:
                                 if st.button("Annuller", key=f"confirm_unsubmit_no_{emp_key}"):
@@ -1218,6 +1247,7 @@ def admin_interface():
                     if success:
                         st.session_state['_form_id'] = form_id + 1
                         st.session_state['_toast'] = f"✅ {name} er tilføjet!"
+                        app_log("employee_add", name, "admin")
                         st.rerun()
 
     with tab3:
@@ -1424,6 +1454,7 @@ def admin_interface():
                 success = save_config(config)
             if success:
                 st.session_state['_toast'] = "✅ Indstillinger gemt!"
+                app_log("settings_save", "SMTP + generelle indstillinger", "admin")
                 st.rerun()
     with col2:
         if st.button("Send test-email"):
@@ -1568,9 +1599,11 @@ def employee_form():
         if save_submission(emp['Name'], data, period_key):
             if data.get('udfyldt'):
                 st.success("✅ Indberettet!")
+                app_log("submission_submit", emp['Name'], emp['Name'])
                 st.balloons()
             else:
                 st.success("Gemt (ikke markeret som indberettet).")
+                app_log("submission_save", emp['Name'], emp['Name'])
 
 
 # ─────────────────────────────────────────────────────
