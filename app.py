@@ -1031,9 +1031,12 @@ def admin_interface():
 
     with tab1:
         st.subheader("Eksisterende medarbejdere")
+        period_key, _ = get_current_period()
         for idx, row in df.iterrows():
             emp_key = row['Name'].replace(' ', '_').lower()
-            with st.expander(f"{row['Name']} ({row['Email']})"):
+            submission = load_submission(row['Name'], period_key)
+            status_icon = "✅" if submission and submission.get('udfyldt', False) else ""
+            with st.expander(f"{status_icon} {row['Name']} ({row['Email']})"):
                     col1, col2 = st.columns(2)
                     with col1:
                         new_name   = st.text_input("Navn",  value=row['Name'],  key=f"name_{emp_key}")
