@@ -2,7 +2,7 @@
   "feriedage": 0,
   "feriefridag": 0,
   "sygedage": 0,
-  "udfyldt": true,
+  "udfyldt": false,
   "timestamp": "2026-07-11T10:20:40.110570",
   "employee": "Jørgen Holm",
   "month": "2026-07"
