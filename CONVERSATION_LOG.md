@@ -254,10 +254,46 @@ Hvis den nye implementering ikke virker, kan du rulle tilbage ved at kopiere fil
   - `AGENTS.md` - Tilføjet shutdown instruks ved "farvel"
 - **Push til GitHub**: Commit `0fe73ff` - "Ret afsendere til 'til' i stedet for 'fra/af'"
 
-## Session afsluttet 4. maj 2026 (seneste - fortsæt herfra næste gang)
+## Session 10. juli 2026 (del 2) — Footer, header og fortryd indberetning
+
+### Hvad der blev lavet
+
+#### 1. Fjernet "Aarhus Universitet" fra PDF-footer
+- `generate_guides.py:210` — `page_footer()` stemmedplede "Timeregnskab — Aarhus Universitet" i bunden af hver PDF-side
+- **Årsag:** Rest fra den skabelon koden blev baseret på — ikke meningen
+- **Rettet til:** "Timeregnskab"
+- Commit `bd8e68d` + `667e81d` (gen-generering af PDF'er)
+
+#### 2. Forenklet PDF-header
+- Tidligere: 100mm høj med gradient, dekorative cirkler, emoji-ikon og stor skrift
+- Nu: 25mm høj — simpel blå firkant med rundede hjørner, hvid titel og undertitel
+- Commit `1289793`
+
+#### 3. "Træk indberetning tilbage"-knap til medarbejdere
+- **Før:** Medarbejdere kunne teknisk set trække en indberetning tilbage ved at fjerne fluebenet og trykke Indsend igen, men det var ikke tydeligt
+- **Nu:** Dedikeret "Træk indberetning tilbage"-knap (kun synlig når der er indberettet)
+- Kræver bekræftelse (Ja/Nej) før den faktisk trækkes tilbage
+- Logger handlingen via `app_log("employee_unsubmit", ...)`
+
+#### 4. Alle vejledninger opdateret med info om fortrydelse
+- **Medarbejder HTML-guide (app.py):** Ny callout ↩️ med forklaring
+- **Admin HTML-guide (app.py):** Nyt tip-kort "Træk indberetning tilbage"
+- **Admin PDF-guide:** Info under "Se indsendelser" om at både admin og medarbejdere kan trække indberetninger tilbage
+- **Medarbejder PDF-guide:** InfoBox mellem trin-for-trin og felter
+
+### Tjekket og verificeret
+- Medarbejderes timer/ferie/sygdom starter automatisk på 0 i en ny periode (ingen JSON-fil for ny periode → `existing` er None → værdi er 0)
 - Alle ændringer er pushet til GitHub
-- Logfilen (CONVERSATION_LOG.md) ligger lokalt i mappen
-- Shutdown instruks tilføjet AGENTS.md (gem log + push ved "farvel")
+
+### Commits
+- `bd8e68d` — "Fjernet 'Aarhus Universitet' fra PDF-footer"
+- `667e81d` — "Gen-genereret PDF-vejledninger uden Aarhus Universitet i footer"
+- `1289793` — "Forenklet PDF-header: 100mm → 25mm, ingen gradient/cirkler/emoji"
+- `70b69b9` — "Tilføjet 'Træk indberetning tilbage'-knap + opdateret alle vejledninger"
+
+---
+
+## Session afsluttet 11. juli 2026
 
 ---
 
