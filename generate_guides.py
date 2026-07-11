@@ -38,13 +38,13 @@ MARGIN = 22 * mm
 # ── Custom flowables ────────────────────────────────────────────────
 
 class CoverHeader(Flowable):
-    """Bred blå header til forsiden."""
+    """Enkel blå header til forsiden."""
     def __init__(self, title, subtitle, width):
         super().__init__()
         self.title = title
         self.subtitle = subtitle
         self._w = width
-        self._h = 100 * mm
+        self._h = 25 * mm
 
     def wrap(self, aw, ah):
         return self._w, self._h
@@ -53,50 +53,16 @@ class CoverHeader(Flowable):
         c = self.canv
         w, h = self._w, self._h
 
-        # Gradient baggrund (simuleret med rektangler)
-        steps = 60
-        for i in range(steps):
-            t = i / steps
-            r = int(0x00 + t * (0x34 - 0x00))
-            g = int(0x71 + t * (0xaa - 0x71))
-            b = int(0xe3 + t * (0xdc - 0xe3))
-            c.setFillColorRGB(r/255, g/255, b/255)
-            c.rect(i * w / steps, 0, w / steps + 1, h, fill=1, stroke=0)
+        c.setFillColor(BLUE)
+        c.roundRect(0, 0, w, h, 3 * mm, fill=1, stroke=0)
 
-        # Dekorativ cirkel øverst til højre
-        c.setFillColorRGB(1, 1, 1, 0.07)
-        c.circle(w - 30 * mm, h - 10 * mm, 55 * mm, fill=1, stroke=0)
-        c.circle(w - 10 * mm, 20 * mm, 30 * mm, fill=1, stroke=0)
-
-        # Lille ikon-boks
-        c.setFillColor(colors.HexColor("#ffffff30"))
-        c.roundRect(MARGIN - 22*mm, h - 28*mm, 12*mm, 12*mm, 2*mm, fill=1, stroke=0)
         c.setFillColor(WHITE)
-        c.setFont("Helvetica-Bold", 16)
-        c.drawString(MARGIN - 18.5*mm, h - 20.5*mm, "📊")
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(6 * mm, 10 * mm, self.title)
 
-        # Titel
-        c.setFillColor(WHITE)
-        c.setFont("Helvetica-Bold", 26)
-        c.drawString(MARGIN - 22*mm, h - 52*mm, self.title)
-
-        # Undertitel
-        c.setFont("Helvetica", 13)
-        c.setFillColorRGB(1, 1, 1, 0.85)
-        c.drawString(MARGIN - 22*mm, h - 66*mm, self.subtitle)
-
-        # Dato-linje
-        from datetime import date
-        dato = date.today().strftime("Udarbejdet %d. %B %Y").replace(
-            "January","januar").replace("February","februar").replace(
-            "March","marts").replace("April","april").replace(
-            "May","maj").replace("June","juni").replace(
-            "July","juli").replace("August","august").replace(
-            "September","september").replace("October","oktober").replace(
-            "November","november").replace("December","december")
-        c.setFont("Helvetica", 10)
-        c.setFillColorRGB(1, 1, 1, 0.65)
-        c.drawString(MARGIN - 22*mm, h - 82*mm, dato)
+        c.setFont("Helvetica", 9)
+        c.setFillColorRGB(1, 1, 1, 0.8)
+        c.drawString(6 * mm, 4 * mm, self.subtitle)
 
 
 class SectionHeader(Flowable):
