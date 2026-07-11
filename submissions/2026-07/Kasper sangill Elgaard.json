@@ -6,8 +6,8 @@
   "ekstra_lørdag": 0,
   "ekstra_søndag": 0,
   "ekstra_andet": 0,
-  "udfyldt": false,
-  "timestamp": "2026-07-11T10:03:29.222390",
+  "udfyldt": true,
+  "timestamp": "2026-07-11T10:03:53.555032",
   "employee": "Kasper sangill Elgaard",
   "month": "2026-07"
 }
