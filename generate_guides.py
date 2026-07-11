@@ -207,7 +207,7 @@ def page_footer(canvas, doc):
     canvas.saveState()
     canvas.setFont("Helvetica", 8)
     canvas.setFillColor(GRAY_MID)
-    canvas.drawString(MARGIN, 12*mm, "Timeregnskab — Aarhus Universitet")
+    canvas.drawString(MARGIN, 12*mm, "Timeregnskab")
     canvas.drawRightString(W - MARGIN, 12*mm, f"Side {doc.page}")
     canvas.setStrokeColor(GRAY_LINE)
     canvas.setLineWidth(0.5)
