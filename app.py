@@ -574,6 +574,10 @@ code {{
       <p class="ag-card-desc">Medarbejdere kan rette og genindsende inden d. {DEADLINE_DAY}. Det seneste Indsend overskriver det forrige.</p>
     </div>
     <div class="ag-card">
+      <div class="ag-card-title">↩️ Træk indberetning tilbage</div>
+      <p class="ag-card-desc">Medarbejdere kan trække deres indberetning tilbage via en knap på deres side — de skal blot indberette igen inden fristen.</p>
+    </div>
+    <div class="ag-card">
       <div class="ag-card-title">📱 Mobilvenligt</div>
       <p class="ag-card-desc">Medarbejderformularen virker på alle enheder — telefon, tablet og computer.</p>
     </div>
@@ -665,6 +669,10 @@ def get_employee_guide_html(period_label, reminder_day, deadline_day):
     <div class="eg-callout info">
       <span>💾</span>
       <div>Du kan klikke <strong>Indsend</strong> flere gange — f.eks. hvis du vil rette et tal. Det seneste indsend erstatter det forrige.</div>
+    </div>
+    <div class="eg-callout info">
+      <span>↩️</span>
+      <div>Har du indberettet og fortrudt? Klik <strong>"Træk indberetning tilbage"</strong> for at fjerne din indberetning. Du skal derefter indberette igen inden fristen.</div>
     </div>
   </div>
 
@@ -1557,6 +1565,25 @@ def employee_form():
 
     if already_submitted:
         st.success("✅ Du har allerede indberettet for denne periode. Du kan stadig rette og genindsende.")
+        if st.button("Træk indberetning tilbage", key="unsubmit_btn", type="secondary"):
+            st.session_state['_confirm_unsubmit_employee'] = True
+            st.rerun()
+
+        if st.session_state.get('_confirm_unsubmit_employee'):
+            st.warning("Er du sikker på, at du vil trække din indberetning tilbage? Du skal indberette igen inden fristen.")
+            cy, cn = st.columns(2)
+            with cy:
+                if st.button("Ja, træk tilbage", key="unsubmit_yes"):
+                    existing['udfyldt'] = False
+                    save_submission(emp['Name'], existing, period_key)
+                    st.session_state.pop('_confirm_unsubmit_employee', None)
+                    st.session_state['_toast'] = "Indberetning trukket tilbage"
+                    app_log("employee_unsubmit", emp['Name'], emp['Name'])
+                    st.rerun()
+            with cn:
+                if st.button("Nej", key="unsubmit_no"):
+                    st.session_state.pop('_confirm_unsubmit_employee', None)
+                    st.rerun()
 
     data = {}
 

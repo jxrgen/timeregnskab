@@ -413,6 +413,13 @@ def build_admin_pdf(path):
             "ikke har indberettet — disse markeres tydeligt med 'Ikke indberettet'.",
         ], cw, "📊"),
         Spacer(1, 3*mm),
+        Paragraph(
+            "En medarbejder kan trække sin indberetning tilbage via knappen "
+            "\"Træk indberetning tilbage\" på deres side. Du kan også fjerne en "
+            "indberetning under <b>Medarbejdere</b> → åbn medarbejderen → "
+            "\"Fjern indberetning\".", s["body"]
+        ),
+        Spacer(1, 3*mm),
         InfoBox([
             "Modtager du ikke admin-mailen d. 21? Tjek din spammappe.",
             "Tilfoej systemets afsenderadresse til dine kontakter for at undgaa det fremover.",
@@ -622,6 +629,12 @@ def build_employee_pdf(path):
             ),
             Spacer(1, 2*mm),
         ]))
+    story.append(Spacer(1, 6*mm))
+
+    story.append(InfoBox([
+        "Har du indberettet og fortrudt? Klik 'Træk indberetning tilbage' for at",
+        "fjerne din indberetning. Du skal derefter indberette igen inden fristen.",
+    ], cw, "↩️"))
     story.append(Spacer(1, 6*mm))
 
     # ── 4. Felter ───────────────────────────────────────────────────
