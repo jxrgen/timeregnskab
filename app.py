@@ -1393,8 +1393,25 @@ def admin_interface():
 
     with tab6:
         st.subheader("Simuler indsendelse")
-        period_key, period_label = get_current_period()
-        st.info(f"📅 Aktuel periode: **{period_label}**")
+        current_period_key, current_period_label = get_current_period()
+
+        # Byg liste over de seneste 4 perioder (inkl. indeværende)
+        period_options = {}
+        pk = current_period_key
+        for _ in range(4):
+            prev = get_previous_month(pk)
+            lbl = f"21. {format_month_danish(prev)} – 20. {format_month_danish(pk)}"
+            period_options[lbl] = pk
+            pk = get_previous_month(pk)
+        period_labels_list = list(period_options.keys())
+        selected_label = st.selectbox("Vælg periode", period_labels_list, index=0)
+        period_key = period_options[selected_label]
+        period_label = selected_label
+
+        if period_key != current_period_key:
+            st.warning(f"⚠️ Du har valgt en tidligere periode — submissions/{period_key}/ bruges.")
+        else:
+            st.info(f"📅 Aktuel periode: **{period_label}**")
         st.write("Klik for at sende en samlet opsummering til administratoren nu — uanset hvilken dato det er.")
         if st.button("Send opsummering til admin nu", type="primary", key="simulate_btn"):
             # Altid hent frisk config fra GitHub — bypass session state cache
