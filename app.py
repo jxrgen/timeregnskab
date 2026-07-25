@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 import os
+import base64
 from github import Github
 import json
 from datetime import datetime
@@ -1087,9 +1088,9 @@ def admin_interface():
 
     df = df.sort_values('Name').reset_index(drop=True)
 
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
         "Medarbejdere", "Tilføj ny", "Indsendelser",
-        "Fælles besked", "Systeminfo", "Simuler", "Vejledning"
+        "Fælles besked", "Systeminfo", "Simuler", "Vejledning", "Log & Gendan"
     ])
 
     with tab1:
@@ -1462,6 +1463,109 @@ def admin_interface():
 
     with tab7:
         st.markdown(get_admin_guide_html(), unsafe_allow_html=True)
+
+    with tab8:
+        st.subheader("📋 Log & Gendannelse")
+        st.write("Alle ændringer i systemet er gemt i GitHub og kan gendannes herfra.")
+
+        g = get_github_client()
+        log_repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
+
+        # ── Aktivitetslog ──────────────────────────────────────
+        st.markdown("### Seneste ændringer")
+        if st.button("🔄 Hent aktivitetslog", key="log_fetch_btn"):
+            with st.spinner("Henter log fra GitHub..."):
+                commits = list(log_repo.get_commits()[:40])
+            rows = []
+            for c in commits:
+                rows.append({
+                    'Dato': c.commit.author.date.strftime('%d/%m/%Y %H:%M'),
+                    'Besked': c.commit.message.split('\n')[0][:80],
+                    'SHA': c.sha[:7],
+                })
+            st.session_state['_log_commits'] = (rows, commits)
+
+        if '_log_commits' in st.session_state:
+            rows, _ = st.session_state['_log_commits']
+            st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+        st.divider()
+
+        # ── Gendan en fil ──────────────────────────────────────
+        st.markdown("### Gendan en fil")
+        st.write("Vælg hvilken fil du vil se historik for og gendan til en tidligere version.")
+
+        common_files = ["employees.csv", "config.json"] + [
+            f"submissions/2026-07/{emp['Name']}.json"
+            for _, emp in df.iterrows() if emp.get('Active')
+        ]
+        file_choice = st.selectbox("Vælg fil", ["(skriv nedenfor)"] + common_files, key="log_file_select")
+        custom_path = st.text_input("Eller skriv filsti manuelt", placeholder="submissions/2026-07/Navn.json", key="log_custom_path")
+        file_path = custom_path.strip() or (file_choice if file_choice != "(skriv nedenfor)" else "")
+
+        if file_path:
+            if st.button(f"Hent historik for: {file_path}", key="log_history_btn"):
+                with st.spinner("Henter versionshistorik..."):
+                    file_commits = list(log_repo.get_commits(path=file_path)[:25])
+                st.session_state['_log_file'] = (file_path, file_commits)
+                st.session_state.pop('_log_preview_content', None)
+                st.session_state.pop('_log_restore_confirm', None)
+
+        if '_log_file' in st.session_state:
+            log_fp, file_commits = st.session_state['_log_file']
+            if file_path == log_fp and file_commits:
+                version_labels = [
+                    f"{c.commit.author.date.strftime('%d/%m/%Y %H:%M')}  —  {c.commit.message.split(chr(10))[0][:55]}  [{c.sha[:7]}]"
+                    for c in file_commits
+                ]
+                selected_idx = st.selectbox("Vælg version", range(len(version_labels)),
+                                            format_func=lambda i: version_labels[i], key="log_version_select")
+                selected_commit = file_commits[selected_idx]
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("👁 Vis indhold", key="log_preview_btn"):
+                        raw = log_repo.get_contents(log_fp, ref=selected_commit.sha)
+                        st.session_state['_log_preview_content'] = (log_fp, selected_commit.sha, base64.b64decode(raw.content).decode('utf-8'))
+                with col2:
+                    if st.button("⏪ Gendan denne version", type="primary", key="log_restore_btn"):
+                        st.session_state['_log_restore_confirm'] = (log_fp, selected_commit.sha, version_labels[selected_idx])
+                        st.session_state.pop('_log_preview_content', None)
+
+                if '_log_preview_content' in st.session_state:
+                    prev_fp, prev_sha, prev_text = st.session_state['_log_preview_content']
+                    if prev_fp == log_fp and prev_sha == selected_commit.sha:
+                        lang = 'json' if log_fp.endswith('.json') else 'text'
+                        st.markdown(f"**Indhold ved valgt version ({selected_commit.sha[:7]}):**")
+                        st.code(prev_text, language=lang)
+
+                if '_log_restore_confirm' in st.session_state:
+                    restore_fp, restore_sha, restore_label = st.session_state['_log_restore_confirm']
+                    if restore_fp == log_fp:
+                        st.warning(f"⚠️ Er du sikker? **{restore_fp}** gendannes til versionen fra:\n\n_{restore_label}_")
+                        rc1, rc2 = st.columns(2)
+                        with rc1:
+                            if st.button("Ja, gendan", type="primary", key="log_restore_yes"):
+                                with st.spinner("Gendanner..."):
+                                    old = log_repo.get_contents(restore_fp, ref=restore_sha)
+                                    old_text = base64.b64decode(old.content).decode('utf-8')
+                                    current = log_repo.get_contents(restore_fp)
+                                    log_repo.update_file(
+                                        restore_fp,
+                                        f"Gendannet {restore_fp} til {restore_sha[:7]}",
+                                        old_text,
+                                        current.sha
+                                    )
+                                st.toast(f"✅ {restore_fp} er gendannet!")
+                                st.session_state.pop('_log_restore_confirm', None)
+                                st.session_state.pop('_log_file', None)
+                                st.rerun()
+                        with rc2:
+                            if st.button("Nej", key="log_restore_no"):
+                                st.session_state.pop('_log_restore_confirm', None)
+                                st.rerun()
+            elif file_commits == []:
+                st.info("Ingen historik fundet for denne fil.")
 
     st.divider()
 
