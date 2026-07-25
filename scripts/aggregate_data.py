@@ -201,9 +201,14 @@ def main():
     try:
         file = repo.get_contents(summary_path)
         repo.update_file(summary_path, f"Opdateret summary {month_key}", csv_content_out, file.sha)
-    except:
-        repo.create_file(summary_path, f"Oprettet summary {month_key}", csv_content_out)
-    print(f"Summary gemt: {summary_path}")
+        print(f"Summary opdateret: {summary_path}")
+    except Exception as e_get:
+        try:
+            repo.create_file(summary_path, f"Oprettet summary {month_key}", csv_content_out)
+            print(f"Summary oprettet: {summary_path}")
+        except Exception as e_create:
+            print(f"Kunne ikke gemme summary ({summary_path}): get={e_get} create={e_create}")
+            return
 
     backup_path = f"archive/{month_key}"
     try:
