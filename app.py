@@ -1413,7 +1413,25 @@ def admin_interface():
         else:
             st.info(f"📅 Aktuel periode: **{period_label}**")
         st.write("Klik for at sende en samlet opsummering til administratoren nu — uanset hvilken dato det er.")
-        if st.button("Send opsummering til admin nu", type="primary", key="simulate_btn"):
+
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("Vis opsummering for den valgte periode", key="preview_btn"):
+                with st.spinner("Indsamler data..."):
+                    preview_df = collect_period_data(df, period_key)
+                st.session_state['_simulate_preview'] = (preview_df, period_label)
+        with col2:
+            if st.button("Send opsummering til admin nu", type="primary", key="simulate_btn"):
+                st.session_state['_simulate_send'] = True
+
+        if '_simulate_preview' in st.session_state:
+            preview_df, preview_label = st.session_state['_simulate_preview']
+            submitted_count = (preview_df['Indberettet'] == 'Ja').sum()
+            total_count = len(preview_df)
+            st.markdown(f"**Forhåndsvisning — {preview_label}** ({submitted_count}/{total_count} indberettet)")
+            st.dataframe(preview_df, use_container_width=True)
+
+        if st.session_state.pop('_simulate_send', False):
             # Altid hent frisk config fra GitHub — bypass session state cache
             st.session_state.pop('config_data', None)
             config = load_config()
@@ -1435,8 +1453,6 @@ def admin_interface():
                     f"{summary_df.to_string(index=False)}"
                 )
                 html_body = build_summary_html(period_label, summary_df)
-                st.write("**Forhåndsvisning:**")
-                st.dataframe(summary_df)
                 try:
                     with st.spinner(f"Sender til {admin_email}..."):
                         send_email_smtp(admin_email, subject, plain, config, html=html_body)
