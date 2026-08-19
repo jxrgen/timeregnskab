@@ -1,9 +1,9 @@
 {
-  "feriedage": 9,
+  "feriedage": 0,
   "feriefridag": 0,
   "sygedage": 0,
-  "udfyldt": false,
-  "timestamp": "2026-08-18T13:19:49.714604",
+  "udfyldt": true,
+  "timestamp": "2026-08-19T09:28:45.705368",
   "employee": "Gitte Friis",
   "month": "2026-08"
 }
