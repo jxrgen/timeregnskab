@@ -18,6 +18,7 @@ REPO_OWNER = os.getenv("REPO_OWNER", "jxrgen")
 REPO_NAME = os.getenv("REPO_NAME", "timeregnskab")
 EMPLOYEES_FILE = "employees.csv"
 SUBMISSIONS_DIR = "submissions"
+ARCHIVE_DIR = "archive"
 LOG_DIR = "logs"
 LOG_FILE = "logs/app.log"
 
@@ -783,6 +784,21 @@ def load_submission(employee_name, month):
     return all_subs.get(employee_name)
 
 
+def _read_submissions_dir(repo, dir_path):
+    """Læs alle indberetnings-JSON-filer i én mappe. Springer transfer-filer over."""
+    out = {}
+    try:
+        contents = repo.get_contents(dir_path)
+        for item in contents:
+            if item.name.endswith('.json') and not item.name.startswith('transfer_'):
+                emp_name = item.name[:-5]
+                data = json.loads(base64.b64decode(item.content).decode('utf-8'))
+                out[emp_name] = data
+    except Exception:
+        pass
+    return out
+
+
 def load_all_submissions(month):
     cache_key = f'submissions_{month}'
     if cache_key in st.session_state:
@@ -792,17 +808,10 @@ def load_all_submissions(month):
         g = get_github_client()
         if g:
             repo = g.get_user(REPO_OWNER).get_repo(REPO_NAME)
-            dir_path = f"{SUBMISSIONS_DIR}/{month}"
-            try:
-                contents = repo.get_contents(dir_path)
-                import base64
-                for item in contents:
-                    if item.name.endswith('.json'):
-                        emp_name = item.name[:-5]
-                        data = json.loads(base64.b64decode(item.content).decode('utf-8'))
-                        result[emp_name] = data
-            except Exception:
-                pass
+            # Læs først arkivet, dernæst de aktive submissions. Aktive filer vinder,
+            # så en periode der er arkiveret (og slettet fra submissions/) stadig vises.
+            result.update(_read_submissions_dir(repo, f"{ARCHIVE_DIR}/{month}"))
+            result.update(_read_submissions_dir(repo, f"{SUBMISSIONS_DIR}/{month}"))
     except Exception:
         pass
     st.session_state[cache_key] = result
@@ -897,6 +906,13 @@ def get_previous_month(month_str):
 def format_month_danish(month_str):
     year, month = map(int, month_str.split('-'))
     return f"{MONTHS_DA[month]} {year}"
+
+
+def format_period_danish(period_key):
+    """Fuld periode-spændvidde, fx '21. Juli 2026 – 20. August 2026'.
+    period_key er slutmåneden; perioden løber fra d. 21 i forrige måned til d. 20 i slutmåneden."""
+    start = get_previous_month(period_key)
+    return f"21. {format_month_danish(start)} – 20. {format_month_danish(period_key)}"
 
 
 def get_current_period():
@@ -1199,13 +1215,13 @@ def admin_interface():
                     is_submitted = submission.get('udfyldt', False) if submission else False
                     if is_submitted:
                         st.markdown("---")
-                        if st.checkbox(f"Fjern indberetning for {format_month_danish(period_key)}",
+                        if st.checkbox(f"Fjern indberetning for {format_period_danish(period_key)}",
                                        key=f"unsubmit_{emp_key}"):
                             st.session_state['_confirm_unsubmit'] = emp_key
                         else:
                             st.session_state.pop('_confirm_unsubmit', None)
                         if st.session_state.get('_confirm_unsubmit') == emp_key:
-                            st.warning(f"Er du sikker på, at du vil fjerne **{row['Name']}s** indberetning for {format_month_danish(period_key)}?")
+                            st.warning(f"Er du sikker på, at du vil fjerne **{row['Name']}s** indberetning for {format_period_danish(period_key)}?")
                             cy, cn = st.columns(2)
                             with cy:
                                 if st.button("Ja, fjern indberetning", key=f"confirm_unsubmit_yes_{emp_key}"):
@@ -1223,7 +1239,7 @@ def admin_interface():
                                     st.session_state.pop(f'unsubmit_{emp_key}', None)
                                     st.rerun()
                     else:
-                        st.caption(f"Ingen indberetning for {format_month_danish(period_key)}")
+                        st.caption(f"Ingen indberetning for {format_period_danish(period_key)}")
 
     with tab2:
         st.subheader("Tilføj ny medarbejder")
@@ -1272,12 +1288,13 @@ def admin_interface():
         prev_key      = get_previous_month(period_key)
         prev_prev_key = get_previous_month(prev_key)
         months_options = [period_key, prev_key, prev_prev_key]
-        month_labels   = [f"{format_month_danish(period_key)} (igangværende)",
-                          f"{format_month_danish(prev_key)} (slut)",
-                          f"{format_month_danish(prev_prev_key)} (slut)"]
+        month_labels   = [f"{format_period_danish(period_key)} (igangværende)",
+                          f"{format_period_danish(prev_key)} (afsluttet)",
+                          f"{format_period_danish(prev_prev_key)} (afsluttet)"]
         selected_idx   = st.selectbox("Vælg periode", range(len(month_labels)),
                                        format_func=lambda i: month_labels[i])
         month = months_options[selected_idx]
+        st.caption("Afsluttede perioder er arkiveret, men vises fortsat her — data forsvinder ikke efter opsamlingen d. 21.")
         col_refresh, _ = st.columns([1, 4])
         with col_refresh:
             if st.button("🔄 Opdater", key="refresh_submissions", help="Hent seneste status fra GitHub"):
@@ -1400,8 +1417,7 @@ def admin_interface():
         period_options = {}
         pk = current_period_key
         for _ in range(4):
-            prev = get_previous_month(pk)
-            lbl = f"21. {format_month_danish(prev)} – 20. {format_month_danish(pk)}"
+            lbl = format_period_danish(pk)
             period_options[lbl] = pk
             pk = get_previous_month(pk)
         period_labels_list = list(period_options.keys())
@@ -1410,7 +1426,7 @@ def admin_interface():
         period_label = selected_label
 
         if period_key != current_period_key:
-            st.warning(f"⚠️ Du har valgt en tidligere periode — submissions/{period_key}/ bruges.")
+            st.warning(f"⚠️ Du har valgt en tidligere (afsluttet) periode — data hentes fra arkivet.")
         else:
             st.info(f"📅 Aktuel periode: **{period_label}**")
         st.write("Klik for at sende en samlet opsummering til administratoren nu — uanset hvilken dato det er.")
