@@ -6,6 +6,7 @@ from github import Github
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formatdate, make_msgid
 import random
 
 REMINDER_DAY = 18
@@ -43,17 +44,22 @@ SENDERS = [
 def send_email(to_email, subject, body, smtp_config):
     try:
         msg = MIMEMultipart()
-        msg['From'] = smtp_config['username']
+        msg['From'] = f"Timeregnskab <{smtp_config['username']}>"
         msg['To'] = to_email
         msg['Subject'] = subject
+        msg['Date'] = formatdate(localtime=True)
+        msg['Message-ID'] = make_msgid(domain=smtp_config['username'].split('@')[-1])
         msg.attach(MIMEText(body, 'plain', 'utf-8'))
 
         port = int(smtp_config['port'])
         if port == 465:
             server = smtplib.SMTP_SSL(smtp_config['server'], port)
+            server.ehlo()
         else:
             server = smtplib.SMTP(smtp_config['server'], port)
+            server.ehlo()
             server.starttls()
+            server.ehlo()
         server.login(smtp_config['username'], smtp_config['password'])
         server.send_message(msg)
         server.quit()
@@ -93,10 +99,12 @@ def main():
         'server': config.get('smtp_server', 'smtp.gmail.com'),
         'port': config.get('smtp_port', 587),
         'username': config.get('smtp_username', ''),
-        'password': config.get('smtp_password', ''),
+        # Adgangskoden ligger IKKE i den offentlige config.json — hentes fra
+        # GitHub Actions-secret (SMTP_PASSWORD), med config som fallback.
+        'password': os.getenv("SMTP_PASSWORD") or config.get('smtp_password', ''),
     }
     if not all([smtp_config['username'], smtp_config['password']]):
-        print("SMTP config mangler i config.json")
+        print("SMTP config mangler (sæt SMTP_PASSWORD-secret + smtp_username i config.json)")
         return
 
     # Load employees

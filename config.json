@@ -1,10 +1,10 @@
 {
   "submission_deadline_day": 20,
   "admin_notification_day": 25,
-  "smtp_server": "send.one.com",
-  "smtp_port": 465,
-  "smtp_username": "timereg@vimby.dk",
-  "smtp_password": "1lnrmxpfltl!",
+  "smtp_server": "smtp.gmail.com",
+  "smtp_port": 587,
+  "smtp_username": "jxrgen@gmail.com",
+  "smtp_password": "",
   "admin_email": "timereg@vimby.dk",
   "app_url": "https://timeregnskab.streamlit.app"
 }

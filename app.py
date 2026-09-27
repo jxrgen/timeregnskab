@@ -11,8 +11,19 @@ import re
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formatdate, make_msgid
 
 st.set_page_config(page_title="Timeregnskab", page_icon="📊", layout="wide")
+
+
+def get_smtp_password(config):
+    """SMTP-adgangskoden opbevares som Streamlit-secret (SMTP_PASSWORD), ikke i
+    den offentlige config.json. Falder tilbage til config for bagudkompatibilitet."""
+    try:
+        secret_pw = st.secrets.get("SMTP_PASSWORD", "")
+    except Exception:
+        secret_pw = ""
+    return secret_pw or config.get('smtp_password', '')
 
 REPO_OWNER = os.getenv("REPO_OWNER", "jxrgen")
 REPO_NAME = os.getenv("REPO_NAME", "timeregnskab")
@@ -1013,11 +1024,13 @@ def send_email_smtp(to_email, subject, body, config, html=None):
     smtp_server = config.get('smtp_server', '')
     smtp_port = int(config.get('smtp_port', 587))
     smtp_username = config.get('smtp_username', '')
-    smtp_password = config.get('smtp_password', '')
+    smtp_password = get_smtp_password(config)
     msg = MIMEMultipart('alternative')
-    msg['From'] = smtp_username
+    msg['From'] = f"Timeregnskab <{smtp_username}>"
     msg['To'] = to_email
     msg['Subject'] = subject
+    msg['Date'] = formatdate(localtime=True)
+    msg['Message-ID'] = make_msgid(domain=smtp_username.split('@')[-1] if '@' in smtp_username else 'localhost')
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
     if html:
         msg.attach(MIMEText(html, 'html', 'utf-8'))
@@ -1356,8 +1369,8 @@ def admin_interface():
                 st.error("Du skal vælge mindst en medarbejder!")
             else:
                 config = load_config()
-                if not all([config.get('smtp_server'), config.get('smtp_username'), config.get('smtp_password')]):
-                    st.error("SMTP-indstillinger mangler!")
+                if not all([config.get('smtp_server'), config.get('smtp_username'), get_smtp_password(config)]):
+                    st.error("SMTP-indstillinger mangler! (tjek at SMTP_PASSWORD-secret er sat)")
                 else:
                     sent_count = error_count = 0
                     for emp in selected:
@@ -1391,8 +1404,8 @@ def admin_interface():
         st.write(f"**SMTP Server:** {config.get('smtp_server', 'Ikke sat')}")
         st.write(f"**SMTP Port:** {config.get('smtp_port', 'Ikke sat')}")
         st.write(f"**SMTP Brugernavn:** {config.get('smtp_username', 'Ikke sat')}")
-        pw = config.get('smtp_password', '')
-        st.write(f"**SMTP Password:** {'*' * len(pw) if pw else 'Ikke sat'}")
+        pw = get_smtp_password(config)
+        st.write(f"**SMTP Password:** {'✔ sat (via secret)' if pw else '❌ Ikke sat'}")
         st.write(f"**Admin Email:** {config.get('admin_email', 'Ikke sat')}")
         st.markdown("### Medarbejdere")
         for _, row in df.iterrows():
@@ -1453,7 +1466,9 @@ def admin_interface():
             st.session_state.pop('config_data', None)
             config = load_config()
             admin_email = config.get('admin_email', '')
-            missing = [k for k in ('smtp_server', 'smtp_username', 'smtp_password') if not config.get(k)]
+            missing = [k for k in ('smtp_server', 'smtp_username') if not config.get(k)]
+            if not get_smtp_password(config):
+                missing.append('SMTP_PASSWORD (secret)')
             if not admin_email:
                 st.error("❌ Admin email ikke konfigureret — sæt den under SMTP-indstillinger nedenfor.")
             elif missing:
@@ -1587,23 +1602,24 @@ def admin_interface():
 
     config = load_config()
     st.subheader("SMTP Email-indstillinger")
-    if not config.get('smtp_password'):
-        st.warning("⚠️ SMTP password er ikke gemt. Udfyld feltet nedenfor og klik 'Gem SMTP-indstillinger'.")
+    if not get_smtp_password(config):
+        st.warning("⚠️ SMTP-adgangskode mangler. Tilføj secret'en **SMTP_PASSWORD** i Streamlit → Settings → Secrets (den skal IKKE i config.json — repo'et er offentligt).")
     else:
-        st.info("Disse indstillinger bruges til at sende påmindelser og notifikationer.")
+        st.info("Disse indstillinger bruges til at sende påmindelser og notifikationer. Adgangskoden hentes fra secret'en SMTP_PASSWORD.")
     col1, col2 = st.columns(2)
     with col1:
         smtp_server   = st.text_input("SMTP Server",            value=config.get('smtp_server', 'smtp.gmail.com'))
         smtp_port     = st.number_input("SMTP Port",            value=int(config.get('smtp_port', 587)), min_value=1, max_value=65535)
         smtp_username = st.text_input("SMTP Brugernavn (email)", value=config.get('smtp_username', ''))
     with col2:
-        has_pw = bool(config.get('smtp_password'))
-        smtp_password = st.text_input(
-            "SMTP Password",
-            value="",
-            type="password",
-            placeholder="(uændret — udfyld kun for at skifte)" if has_pw else "Skriv password",
-        )
+        try:
+            _has_secret_pw = bool(st.secrets.get("SMTP_PASSWORD", ""))
+        except Exception:
+            _has_secret_pw = False
+        if _has_secret_pw:
+            st.caption("🔒 SMTP-adgangskode hentes fra Streamlit-secret **SMTP_PASSWORD** (ligger ikke i den offentlige config.json).")
+        else:
+            st.warning("⚠️ Ingen **SMTP_PASSWORD**-secret fundet. Tilføj den under Streamlit → Settings → Secrets. Adgangskoden må IKKE gemmes i config.json (repo'et er offentligt).")
         admin_email   = st.text_input("Admin Email (modtager)", value=config.get('admin_email', ''))
         app_url_input = st.text_input("App URL", value=config.get('app_url', ''),
                                       placeholder="https://din-app.streamlit.app",
@@ -1614,8 +1630,9 @@ def admin_interface():
             config['smtp_server']   = smtp_server
             config['smtp_port']     = smtp_port
             config['smtp_username'] = smtp_username
-            if smtp_password:  # Bevar eksisterende password hvis feltet er tomt
-                config['smtp_password'] = smtp_password
+            # Adgangskoden gemmes bevidst IKKE i config.json (repo'et er offentligt).
+            # Den administreres som secret (SMTP_PASSWORD) i Streamlit og GitHub Actions.
+            config['smtp_password'] = ""
             config['admin_email']   = admin_email
             if app_url_input.strip():
                 config['app_url'] = app_url_input.strip().rstrip('/')
@@ -1627,10 +1644,10 @@ def admin_interface():
                 st.rerun()
     with col2:
         if st.button("Send test-email"):
-            # Brug det gemte password hvis formularfeltet er tomt
-            effective_pw = smtp_password or config.get('smtp_password', '')
+            # Adgangskoden hentes fra secret (SMTP_PASSWORD), ikke fra config.json
+            effective_pw = get_smtp_password(config)
             if not effective_pw:
-                st.error("❌ SMTP password er ikke gemt — udfyld og gem det under 'Gem SMTP-indstillinger' først.")
+                st.error("❌ SMTP-adgangskode mangler — tilføj secret'en **SMTP_PASSWORD** i Streamlit → Settings → Secrets.")
             else:
                 try:
                     send_email_smtp(

@@ -6,6 +6,7 @@ from github import Github
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formatdate, make_msgid
 
 AGGREGATE_DAY = 21
 
@@ -88,9 +89,11 @@ def build_summary_html(period_label, summary_df, app_url=''):
 def send_email(to_email, subject, plain_body, smtp_config, html_body=None):
     try:
         msg = MIMEMultipart('alternative')
-        msg['From'] = smtp_config['username']
+        msg['From'] = f"Timeregnskab <{smtp_config['username']}>"
         msg['To'] = to_email
         msg['Subject'] = subject
+        msg['Date'] = formatdate(localtime=True)
+        msg['Message-ID'] = make_msgid(domain=smtp_config['username'].split('@')[-1])
         msg.attach(MIMEText(plain_body, 'plain', 'utf-8'))
         if html_body:
             msg.attach(MIMEText(html_body, 'html', 'utf-8'))
@@ -142,7 +145,9 @@ def main():
         'server': config.get('smtp_server', 'smtp.gmail.com'),
         'port': config.get('smtp_port', 587),
         'username': config.get('smtp_username', ''),
-        'password': config.get('smtp_password', ''),
+        # Adgangskoden ligger IKKE i den offentlige config.json — hentes fra
+        # GitHub Actions-secret (SMTP_PASSWORD), med config som fallback.
+        'password': os.getenv("SMTP_PASSWORD") or config.get('smtp_password', ''),
     }
     admin_email = config.get('admin_email', '')
 
